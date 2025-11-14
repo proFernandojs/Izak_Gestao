@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Izak Comunicação Visual - Gestão</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="./assets/Logo1.png">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-container">
+            <img class="logo" src="./assets/Logo1.png" alt="Izak Comunicação Visual">
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active" data-module="dashboard">Dashboard</a></li>
+                <li><a href="#" data-module="orcamentos">Orçamentos</a></li>
+                <li><a href="#" data-module="os">Ordens de Serviço</a></li>
+                <li><a href="#" data-module="financeiro">Financeiro</a></li>
+                <li><a href="#" data-module="estoque">Estoque</a></li>
+                <li><a href="#" data-module="clientes">Clientes</a></li>
+                <li><a href="#" data-module="relatorios">Relatórios</a></li>
+            </ul>
+        </nav>
+    </div>
+    
+    <div class="main-content">
+        <header>
+            <h1 id="module-title">Dashboard</h1>
+            <div class="user-info">
+                <span>Usuário: Admin</span>
+                <button id="logout-btn">Sair</button>
+            </div>
+        </header>
+        
+        <div id="module-content">
+            <!-- Conteúdo do Dashboard (padrão) -->
+            <div class="dashboard" data-module="dashboard">
+                <div class="stats-card">
+                    <h3>Orçamentos Hoje</h3>
+                    <p id="orcamentos-hoje">0</p>
+                </div>
+                <div class="stats-card">
+                    <h3>OS em Andamento</h3>
+                    <p id="os-andamento">0</p>
+                </div>
+                <div class="stats-card">
+                    <h3>Contas a Receber</h3>
+                    <p id="contas-receber">R$ 0,00</p>
+                </div>
+            </div>
+            
+            <!-- Conteúdo do módulo de estoque -->
+            <div class="estoque-module hidden" data-module="estoque">
+                <div class="module-header">
+                    <h2>Controle de Estoque</h2>
+                    <button id="add-item-btn" class="btn-primary">+ Adicionar Item</button>
+                </div>
+                
+                <div id="estoque-list-container">
+                    <div class="estoque-filters">
+                        <input type="text" id="search-item" placeholder="Pesquisar item..." aria-label="Pesquisar itens no estoque">
+                        <label for="filter-category" class="sr-only">Filtrar por categoria</label>
+                         <select id="filter-category" aria-label="Selecione uma categoria para filtrar">
+                        <option value="">Todas categorias</option>
+                        </select>
+                    </div>
+                    
+                    <div id="estoque-list" class="estoque-list">
+                        <!-- Itens serão carregados aqui via JavaScript -->
+                    </div>
+                </div>
+                
+                <div id="item-form-container" class="hidden">
+                    <div class="item-form-wrapper">
+                        <h3 id="form-title">Adicionar Item</h3>
+                        <form id="item-form">
+                            <input type="hidden" id="item-id">
+                            
+                            <div class="form-group">
+                                <label for="item-nome">Nome do Item*</label>
+                                <input type="text" id="item-nome" name="nome" required>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="item-codigo">Código*</label>
+                                    <input type="text" id="item-codigo" name="codigo" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="item-categoria">Categoria</label>
+                                    <input type="text" id="item-categoria" name="categoria" list="categories">
+                                    <datalist id="categories">
+                                        <!-- Categorias existentes serão preenchidas via JavaScript -->
+                                    </datalist>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="item-quantidade">Quantidade em Estoque*</label>
+                                    <input type="number" id="item-quantidade" name="quantidade" min="0" step="0.01" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="item-minimo">Estoque Mínimo*</label>
+                                    <input type="number" id="item-minimo" name="minimo" min="0" step="0.01" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="item-preco">Preço Unitário (R$)*</label>
+                                    <input type="number" id="item-preco" name="preco" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="item-descricao">Descrição</label>
+                                <textarea id="item-descricao" name="descricao" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" id="cancel-item-btn" class="btn-secondary">Cancelar</button>
+                                <button type="submit" class="btn-primary">Salvar Item</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="modules/estoque.js"></script>
+</body>
+</html>

@@ -30,12 +30,12 @@
             <h1 id="module-title">Dashboard</h1>
             <div class="user-info">
                 <span>Usuário: Admin</span>
-                <button id="logout-btn">Sair</button>
+                <button type="button" id="logout-btn">Sair</button>
             </div>
         </header>
         
         <div id="module-content">
-            <!-- Conteúdo do Dashboard (padrão) -->
+             <!-- Conteúdo dos módulos será carregado aqui -->
             <div class="dashboard" data-module="dashboard">
                 <div class="stats-card">
                     <h3>Orçamentos Hoje</h3>
@@ -55,7 +55,7 @@
             <div class="estoque-module hidden" data-module="estoque">
                 <div class="module-header">
                     <h2>Controle de Estoque</h2>
-                    <button id="add-item-btn" class="btn-primary">+ Adicionar Item</button>
+                    <button type="button" id="add-item-btn" class="btn-primary">+ Adicionar Item</button>
                 </div>
                 
                 <div id="estoque-list-container">
@@ -127,6 +127,147 @@
                         </form>
                     </div>
                 </div>
+                        <!-- Conteúdo do módulo de orçamentos -->
+<div class="orcamentos-module hidden" data-module="orcamentos">
+    <div class="module-header">
+        <h2>Gerenciamento de Orçamentos</h2>
+        <button id="add-orcamento-btn" class="btn-primary">+ Novo Orçamento</button>
+    </div>
+    
+    <div id="orcamentos-list-container">
+        <div class="orcamentos-filters" role="group" aria-labelledby="filters-orcamento-heading">
+            <h3 id="filters-orcamento-heading" class="sr-only">Filtros de orçamentos</h3>
+            <input type="text" id="search-orcamento" placeholder="Pesquisar orçamento..." aria-label="Pesquisar orçamentos">
+            <select id="filter-status" aria-label="Filtrar por status">
+                <option value="">Todos os status</option>
+                <option value="pendente">Pendente</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="recusado">Recusado</option>
+                <option value="concluido">Concluído</option>
+            </select>
+            <input type="date" id="filter-date" aria-label="Filtrar por data">
+            <button id="clear-filters" class="btn-accent">Limpar Filtros</button>
+        </div>
+        
+        <div id="orcamentos-list" class="orcamentos-list">
+            <!-- Orçamentos serão carregados aqui via JavaScript -->
+        </div>
+    </div>
+    
+    <div id="orcamento-form-container" class="hidden">
+        <div class="orcamento-form-wrapper">
+            <h3 id="orcamento-form-title">Novo Orçamento</h3>
+            
+            <div class="form-tabs">
+                <button type="button" class="tab-btn active" data-tab="cliente">Cliente</button>
+                <button type="button" class="tab-btn" data-tab="itens">Itens</button>
+                <button type="button" class="tab-btn" data-tab="pagamento">Pagamento</button>
+            </div>
+            
+            <form id="orcamento-form">
+                <input type="hidden" id="orcamento-id">
+                
+                <!-- Aba Cliente -->
+                <div id="tab-cliente" class="tab-content active">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cliente-nome">Nome do Cliente*</label>
+                            <input type="text" id="cliente-nome" name="cliente-nome" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cliente-telefone">Telefone</label>
+                            <input type="tel" id="cliente-telefone" name="cliente-telefone">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cliente-email">E-mail</label>
+                        <input type="email" id="cliente-email" name="cliente-email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cliente-descricao">Descrição do Serviço*</label>
+                        <textarea id="cliente-descricao" name="cliente-descricao" rows="3" required></textarea>
+                    </div>
+                </div>
+                
+                <!-- Aba Itens -->
+                <div id="tab-itens" class="tab-content">
+                    <div class="itens-container">
+                        <div class="item-header">
+                            <h4>Itens do Orçamento</h4>
+                            <button type="button" id="add-item-btn" class="btn-accent">+ Adicionar Item</button>
+                        </div>
+                        
+                        <div id="itens-list">
+                            <!-- Itens serão adicionados dinamicamente -->
+                        </div>
+                        
+                        <div class="resumo-valores">
+                            <div class="valor-item">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">R$ 0,00</span>
+                            </div>
+                            <div class="valor-item">
+                                <label for="desconto">Desconto (%):</label>
+                                <input type="number" id="desconto" name="desconto" min="0" max="100" value="0" step="0.01">
+                                <span id="valor-desconto">R$ 0,00</span>
+                            </div>
+                            <div class="valor-item">
+                                <span>Total:</span>
+                                <span id="total" class="valor-total">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Aba Pagamento -->
+                <div id="tab-pagamento" class="tab-content">
+                    <div class="form-group">
+                        <label for="forma-pagamento">Forma de Pagamento*</label>
+                        <select id="forma-pagamento" name="forma-pagamento" required>
+                            <option value="">Selecione...</option>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="pix">PIX</option>
+                            <option value="cartao_debito">Cartão de Débito</option>
+                            <option value="cartao_credito">Cartão de Crédito</option>
+                            <option value="boleto">Boleto</option>
+                            <option value="transferencia">Transferência</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="prazo-entrega">Prazo de Entrega (dias)</label>
+                        <input type="number" id="prazo-entrega" name="prazo-entrega" min="1" value="7">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="observacoes">Observações</label>
+                        <textarea id="observacoes" name="observacoes" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="orcamento-status">Status*</label>
+                        <select id="orcamento-status" name="orcamento-status" required>
+                            <option value="pendente">Pendente</option>
+                            <option value="aprovado">Aprovado</option>
+                            <option value="recusado">Recusado</option>
+                            <option value="concluido">Concluído</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="cancel-orcamento-btn" class="btn-secondary">Cancelar</button>
+                    <button type="button" id="prev-tab-btn" class="btn-accent">Anterior</button>
+                    <button type="button" id="next-tab-btn" class="btn-primary">Próximo</button>
+                    <button type="submit" id="submit-orcamento-btn" class="btn-primary hidden">Salvar Orçamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
             </div>
         </div>
     </div>

@@ -7,31 +7,63 @@ const EstoqueModule = {
     },
     
     bindEvents: function() {
-        // Botão para adicionar novo item
-        document.getElementById('add-item-btn').addEventListener('click', () => {
-            this.showItemForm();
-        });
-        
+        // Botão para adicionar novo item (procura por classe ou id para compatibilidade)
+        const estoqueAddBtn = document.querySelector('[data-module="estoque"] .add-item-btn') || document.getElementById('add-item-btn');
+        if(estoqueAddBtn) {
+            estoqueAddBtn.addEventListener('click', () => {
+                this.showItemForm();
+            });
+        }
+
         // Formulário de salvamento
-        document.getElementById('item-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveItem();
-        });
-        
+        const itemForm = document.getElementById('item-form');
+        if(itemForm) {
+            itemForm.addEventListener('submit', (e) => {
+                if(!itemForm.checkValidity()) {
+                    itemForm.reportValidity();
+                    return;
+                }
+                e.preventDefault();
+                this.saveItem();
+            });
+
+            // Listener direto no botão submit para garantir captura do clique
+            const submitBtn = itemForm.querySelector('button[type="submit"]');
+            if(submitBtn) {
+                submitBtn.addEventListener('click', (ev) => {
+                    // Garante que o evento submit do form seja disparado
+                    if(typeof itemForm.requestSubmit === 'function') {
+                        itemForm.requestSubmit();
+                    } else {
+                        itemForm.submit();
+                    }
+                });
+            }
+        }
+
         // Cancelar formulário
-        document.getElementById('cancel-item-btn').addEventListener('click', () => {
-            this.hideItemForm();
-        });
-        
+        const cancelBtn = document.getElementById('cancel-item-btn');
+        if(cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                this.hideItemForm();
+            });
+        }
+
         // Filtro de pesquisa
-        document.getElementById('search-item').addEventListener('input', (e) => {
-            this.filterItems(e.target.value);
-        });
-        
+        const searchItem = document.getElementById('search-item');
+        if(searchItem) {
+            searchItem.addEventListener('input', (e) => {
+                this.filterItems(e.target.value);
+            });
+        }
+
         // Filtro por categoria
-        document.getElementById('filter-category').addEventListener('change', (e) => {
-            this.filterByCategory(e.target.value);
-        });
+        const filterCategory = document.getElementById('filter-category');
+        if(filterCategory) {
+            filterCategory.addEventListener('change', (e) => {
+                this.filterByCategory(e.target.value);
+            });
+        }
     },
     
     showItemForm: function(item = null) {
@@ -82,6 +114,7 @@ const EstoqueModule = {
             descricao: formData.get('descricao'),
             dataAtualizacao: new Date().toISOString()
         };
+
 
         // Atualiza ou adiciona o item
         const index = IzakGestao.data.estoque.findIndex(i => i.id === item.id);
@@ -198,7 +231,8 @@ const EstoqueModule = {
                     <span class="stock-min">Mín: ${item.estoqueMinimo}</span>
                 </div>
                 <div class="item-price">
-                    R$ ${item.preco.toFixed(2)}
+                    R$ ${(Number(item.preco) || 0).toFixed(2)}
+
                 </div>
                 <div class="item-actions">
                     <button class="btn-edit" data-id="${item.id}">Editar</button>

@@ -7,13 +7,16 @@ const IzakGestao = {
         this.checkActiveModule();
     },
     
+    
     bindEvents: function() {
         // Navegação entre módulos
         document.querySelectorAll('[data-module]').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const module = e.target.getAttribute('data-module');
-                this.loadModule(module);
+                const module = link.getAttribute('data-module');
+                if(module) {
+                    this.loadModule(module);
+                }
             });
         });
         
@@ -64,8 +67,11 @@ const IzakGestao = {
             link.classList.remove('active');
         });
         
-        // Adiciona a classe active ao link clicado
-        document.querySelector(`[data-module="${moduleName}"]`).classList.add('active');
+        // Adiciona a classe active ao link clicado (verifica existência)
+        const activeLink = document.querySelector(`[data-module="${moduleName}"]`);
+        if(activeLink) {
+            activeLink.classList.add('active');
+        }
         
         // Oculta todos os módulos
         document.querySelectorAll('#module-content > [data-module]').forEach(module => {
@@ -85,9 +91,9 @@ const IzakGestao = {
         if(moduleName === 'dashboard') {
             this.updateDashboard();
         } else if(moduleName === 'estoque') {
-            // Verifica se o módulo de estoque está carregado
-            if(typeof EstoqueModule !== 'undefined') {
-                EstoqueModule.init();
+             if(typeof EstoqueModule !== 'undefined' && !window.estoqueInitialized) {
+                 window.estoqueInitialized = true;
+                 EstoqueModule.init();
             }
         }
     },

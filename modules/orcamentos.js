@@ -1,93 +1,234 @@
 // Módulo de Orçamentos
 const OrcamentosModule = {
+    initialized: false,
     currentTab: 0,
     tabs: ['cliente', 'itens', 'pagamento'],
     currentOrcamento: null,
+
+    // Formata valores monetários em BRL
+    formatCurrency: function(value) {
+        const num = Number(value) || 0;
+        try {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2
+            }).format(num);
+        } catch (err) {
+            return `R$ ${num.toFixed(2)}`;
+        }
+    },
+
+    // Converte texto monetário em número
+    parseCurrencyText: function(text) {
+        if(!text) return 0;
+        return Number(text.replace(/[^0-9,-]/g, '').replace('.', '').replace(',', '.')) || 0;
+    },
     
     init: function() {
+        console.log('OrcamentosModule iniciando...');
+        // Evita múltiplas inicializações que duplicam listeners e salvam em duplicidade
+        if (this.initialized) {
+            console.log('OrcamentosModule já inicializado, apenas atualizando lista');
+            this.renderOrcamentosList();
+            return;
+        }
+        this.initialized = true;
         this.renderOrcamentosList();
         this.bindEvents();
         this.initForm();
     },
     
     bindEvents: function() {
+        console.log('Binding events do OrcamentosModule...');
         // Botão para adicionar novo orçamento
-        document.getElementById('add-orcamento-btn').addEventListener('click', () => {
-            this.showOrcamentoForm();
-        });
+        const addOrcamentoBtn = document.getElementById('add-orcamento-btn');
+        console.log('Botão Novo Orçamento encontrado:', addOrcamentoBtn);
+        if(addOrcamentoBtn) {
+            addOrcamentoBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Previne propagação
+                console.log('Clique no botão Novo Orçamento');
+                this.showOrcamentoForm();
+            });
+        }
         
         // Formulário de salvamento
-        document.getElementById('orcamento-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveOrcamento();
-        });
+        const orcamentoForm = document.getElementById('orcamento-form');
+        if(orcamentoForm) {
+            // Previne propagação de cliques no formulário
+            orcamentoForm.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
+            orcamentoForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.saveOrcamento();
+            });
+        }
         
         // Cancelar formulário
-        document.getElementById('cancel-orcamento-btn').addEventListener('click', () => {
-            this.hideOrcamentoForm();
-        });
+        const cancelBtn = document.getElementById('cancel-orcamento-btn');
+        if(cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.hideOrcamentoForm();
+            });
+        }
         
         // Navegação entre abas
-        document.getElementById('prev-tab-btn').addEventListener('click', () => {
-            this.prevTab();
-        });
+        const prevTabBtn = document.getElementById('prev-tab-btn');
+        if(prevTabBtn) {
+            prevTabBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.prevTab();
+            });
+        }
         
-        document.getElementById('next-tab-btn').addEventListener('click', () => {
-            this.nextTab();
-        });
+        const nextTabBtn = document.getElementById('next-tab-btn');
+        if(nextTabBtn) {
+            nextTabBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.nextTab();
+            });
+        }
         
         // Tabs do formulário
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const tab = e.target.getAttribute('data-tab');
                 this.switchTab(tab);
             });
         });
         
         // Filtros
-        document.getElementById('search-orcamento').addEventListener('input', (e) => {
-            this.filterOrcamentos(e.target.value);
-        });
+        const searchOrcamento = document.getElementById('search-orcamento');
+        if(searchOrcamento) {
+            searchOrcamento.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            searchOrcamento.addEventListener('input', (e) => {
+                e.stopPropagation();
+                this.filterOrcamentos(e.target.value);
+            });
+        }
         
-        document.getElementById('filter-status').addEventListener('change', (e) => {
-            this.filterByStatus(e.target.value);
-        });
+        const filterStatus = document.getElementById('filter-status');
+        if(filterStatus) {
+            filterStatus.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            filterStatus.addEventListener('change', (e) => {
+                e.stopPropagation();
+                this.filterByStatus(e.target.value);
+            });
+        }
         
-        document.getElementById('filter-date').addEventListener('change', (e) => {
-            this.filterByDate(e.target.value);
-        });
+        const filterDate = document.getElementById('filter-date');
+        if(filterDate) {
+            filterDate.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            filterDate.addEventListener('change', (e) => {
+                e.stopPropagation();
+                this.filterByDate(e.target.value);
+            });
+        }
         
-        document.getElementById('clear-filters').addEventListener('click', () => {
-            this.clearFilters();
-        });
+        const clearFilters = document.getElementById('clear-filters');
+        if(clearFilters) {
+            clearFilters.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.clearFilters();
+            });
+        }
         
-        // Adicionar item no orçamento
-        document.getElementById('add-item-btn').addEventListener('click', () => {
-            this.addItemRow();
-        });
+        // Adicionar item no orçamento - será vinculado dinamicamente
+        // quando o formulário for mostrado
         
         // Desconto
-        document.getElementById('desconto').addEventListener('input', () => {
-            this.calcularTotal();
+        const desconto = document.getElementById('desconto');
+        if(desconto) {
+            desconto.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            desconto.addEventListener('input', (e) => {
+                e.stopPropagation();
+                this.calcularTotal();
+            });
+        }
+    },
+    
+    attachAddItemButton: function() {
+        // Vincula o botão de adicionar item - chamado quando o formulário é mostrado
+        console.log('Iniciando attachAddItemButton');
+        const addItemBtn = document.getElementById('add-orcamento-item-btn');
+        console.log('add-orcamento-item-btn encontrado:', addItemBtn !== null);
+        
+        if(!addItemBtn) {
+            console.error('Botão add-orcamento-item-btn NÃO encontrado no DOM');
+            return;
+        }
+        
+        // Remove todos os listeners antigos clonando o botão
+        const newBtn = addItemBtn.cloneNode(true);
+        if(addItemBtn.parentNode) {
+            addItemBtn.parentNode.replaceChild(newBtn, addItemBtn);
+        } else {
+            console.error('Pai do botão não encontrado');
+            return;
+        }
+        
+        // Adiciona o novo listener mantendo o contexto com arrow function
+        newBtn.addEventListener('click', (e) => {
+            console.log('>>> Clique detectado no botão adicionar item');
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('>>> Chamando addItemRow() - contexto:', this);
+            console.log('>>> Número de itens antes de adicionar:', document.querySelectorAll('.item-row').length);
+            try {
+                this.addItemRow();
+                console.log('>>> addItemRow() executado com sucesso');
+                // Força uma verificação após adicionar
+                setTimeout(() => {
+                    console.log('>>> Número de itens após adicionar:', document.querySelectorAll('.item-row').length);
+                    const itensList = document.getElementById('itens-list');
+                    console.log('>>> Conteúdo do itens-list:', itensList ? itensList.innerHTML.substring(0, 200) : 'null');
+                }, 100);
+            } catch(error) {
+                console.error('>>> Erro ao executar addItemRow():', error);
+            }
         });
+        
+        console.log('Listener de adicionar item vinculado com sucesso');
     },
     
     showOrcamentoForm: function(orcamento = null) {
+        console.log('showOrcamentoForm chamado', orcamento ? 'edição' : 'criação');
         this.currentOrcamento = orcamento;
         this.currentTab = 0;
         
         const form = document.getElementById('orcamento-form');
         form.reset();
         
+        // Limpa TODOS os itens existentes antes de abrir o formulário
+        const itensList = document.getElementById('itens-list');
+        if(itensList) {
+            itensList.innerHTML = '';
+            console.log('Lista de itens limpa');
+        }
+        
         if(orcamento) {
             // Modo edição
+            console.log('Modo edição - carregando orçamento');
             form.dataset.id = orcamento.id;
             document.getElementById('cliente-nome').value = orcamento.cliente.nome;
             document.getElementById('cliente-telefone').value = orcamento.cliente.telefone || '';
             document.getElementById('cliente-email').value = orcamento.cliente.email || '';
             document.getElementById('cliente-descricao').value = orcamento.descricao;
             
-            // Carrega itens
+            // Carrega itens do orçamento
             this.loadItens(orcamento.itens);
             
             document.getElementById('forma-pagamento').value = orcamento.pagamento.forma;
@@ -97,17 +238,34 @@ const OrcamentosModule = {
             
             document.getElementById('orcamento-form-title').textContent = 'Editar Orçamento';
         } else {
-            // Modo criação
+            // Modo criação - adiciona um item inicial vazio
+            console.log('Modo criação - adicionando item inicial');
             form.removeAttribute('data-id');
+            
+            // Reseta os campos de totais
+            document.getElementById('desconto').value = '0';
+            
+            // Adiciona um item vazio inicial
             this.addItemRow();
             document.getElementById('orcamento-form-title').textContent = 'Novo Orçamento';
         }
         
         this.switchTab('cliente');
-        this.calcularTotal();
         
+        // Recalcula totais (vai zerar ou calcular baseado nos itens carregados)
+        setTimeout(() => {
+            this.calcularTotal();
+        }, 100);
+        
+        // Mostra o formulário ANTES de vincular o botão
         document.getElementById('orcamento-form-container').classList.remove('hidden');
         document.getElementById('orcamentos-list-container').classList.add('hidden');
+        
+        // Vincula o botão de adicionar item APÓS o formulário estar visível no DOM
+        setTimeout(() => {
+            console.log('Vinculando botão de adicionar item após formulário estar visível');
+            this.attachAddItemButton();
+        }, 150);
     },
     
     hideOrcamentoForm: function() {
@@ -116,7 +274,7 @@ const OrcamentosModule = {
     },
     
     initForm: function() {
-        this.addItemRow();
+        // Inicialização do formulário - agora vinculado em showOrcamentoForm
     },
     
     switchTab: function(tabName) {
@@ -141,6 +299,14 @@ const OrcamentosModule = {
         
         // Atualiza botões de navegação
         this.updateNavButtons();
+        
+        // Re-vincula botão adicionar item quando mudar para aba itens
+        if(tabName === 'itens') {
+            console.log('>>> Mudou para aba itens, vinculando botão...');
+            setTimeout(() => {
+                this.attachAddItemButton();
+            }, 200);
+        }
     },
     
     prevTab: function() {
@@ -176,8 +342,18 @@ const OrcamentosModule = {
     },
     
     addItemRow: function(item = null) {
+        console.log('>>> addItemRow chamado, item:', item);
         const itensList = document.getElementById('itens-list');
+        console.log('>>> itens-list encontrado:', itensList !== null);
+        
+        if(!itensList) {
+            console.error('>>> Container itens-list não encontrado');
+            alert('Erro: Container de itens não encontrado. Tente novamente.');
+            return;
+        }
+        
         const itemId = Date.now() + Math.random().toString(36).substr(2, 9);
+        console.log('>>> Criando item com ID:', itemId);
         
         const itemRow = document.createElement('div');
         itemRow.className = 'item-row';
@@ -191,7 +367,9 @@ const OrcamentosModule = {
             <button type="button" class="remove-item">Remover</button>
         `;
         
+        console.log('>>> Adicionando item ao container');
         itensList.appendChild(itemRow);
+        console.log('>>> Item adicionado ao DOM');
         
         // Adiciona eventos aos campos
         const qtdInput = itemRow.querySelector('.item-quantidade');
@@ -209,24 +387,40 @@ const OrcamentosModule = {
         valorInput.addEventListener('input', calcularItemTotal);
         
         // Botão remover
-        itemRow.querySelector('.remove-item').addEventListener('click', () => {
-            itemRow.remove();
-            this.calcularTotal();
-        });
+        const removeBtn = itemRow.querySelector('.remove-item');
+        if(removeBtn) {
+            removeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                itemRow.remove();
+                this.calcularTotal();
+            });
+        }
         
         // Calcular total inicial
         calcularItemTotal();
+        console.log('>>> Item criado e configurado com sucesso:', itemId);
     },
     
     loadItens: function(itens) {
+        console.log('loadItens chamado com:', itens ? itens.length : 0, 'itens');
         const itensList = document.getElementById('itens-list');
+        if(!itensList) {
+            console.error('itens-list não encontrado em loadItens');
+            return;
+        }
+        
+        // Limpa completamente a lista
         itensList.innerHTML = '';
+        console.log('Lista de itens limpa em loadItens');
         
         if(itens && itens.length > 0) {
+            console.log('Carregando', itens.length, 'itens existentes');
             itens.forEach(item => {
                 this.addItemRow(item);
             });
         } else {
+            console.log('Nenhum item para carregar, adicionando item vazio');
             this.addItemRow();
         }
     },
@@ -243,9 +437,9 @@ const OrcamentosModule = {
         const descontoValor = subtotal * (descontoPercent / 100);
         const total = subtotal - descontoValor;
         
-        document.getElementById('subtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
-        document.getElementById('valor-desconto').textContent = `R$ ${descontoValor.toFixed(2)}`;
-        document.getElementById('total').textContent = `R$ ${total.toFixed(2)}`;
+        document.getElementById('subtotal').textContent = this.formatCurrency(subtotal);
+        document.getElementById('valor-desconto').textContent = this.formatCurrency(descontoValor);
+        document.getElementById('total').textContent = this.formatCurrency(total);
     },
     
     saveOrcamento: function() {
@@ -286,9 +480,9 @@ const OrcamentosModule = {
             },
             descricao: document.getElementById('cliente-descricao').value,
             itens: itens,
-            subtotal: parseFloat(document.getElementById('subtotal').textContent.replace('R$ ', '').replace('.', '').replace(',', '.')),
+            subtotal: this.parseCurrencyText(document.getElementById('subtotal').textContent),
             desconto: parseFloat(document.getElementById('desconto').value) || 0,
-            total: parseFloat(document.getElementById('total').textContent.replace('R$ ', '').replace('.', '').replace(',', '.')),
+            total: this.parseCurrencyText(document.getElementById('total').textContent),
             pagamento: {
                 forma: document.getElementById('forma-pagamento').value,
                 prazo: parseInt(document.getElementById('prazo-entrega').value) || 7
@@ -399,7 +593,13 @@ const OrcamentosModule = {
     },
     
     renderOrcamentosList: function() {
+        console.log('renderOrcamentosList chamado');
         const container = document.getElementById('orcamentos-list');
+        if(!container) {
+            console.error('Container orcamentos-list não encontrado');
+            return;
+        }
+        console.log('Container encontrado:', container);
         container.innerHTML = '';
         
         // Ordena por data (mais recente primeiro)
@@ -407,6 +607,7 @@ const OrcamentosModule = {
             new Date(b.dataCriacao) - new Date(a.dataCriacao)
         );
         
+        console.log('Total de orçamentos:', orcamentos.length);
         if(orcamentos.length === 0) {
             container.innerHTML = '<p class="empty-orcamentos">Nenhum orçamento cadastrado.</p>';
             return;
@@ -440,7 +641,7 @@ const OrcamentosModule = {
                         <p class="orcamento-descricao">${orcamento.descricao}</p>
                     </div>
                     <div class="orcamento-total">
-                        <span class="valor-total">R$ ${orcamento.total.toFixed(2)}</span>
+                        <span class="valor-total">${this.formatCurrency(orcamento.total)}</span>
                     </div>
                 </div>
                 
@@ -556,17 +757,17 @@ const OrcamentosModule = {
                             <tr>
                                 <td>${item.descricao}</td>
                                 <td>${item.quantidade}</td>
-                                <td>R$ ${item.valorUnitario.toFixed(2)}</td>
-                                <td>R$ ${item.total.toFixed(2)}</td>
+                                <td>${this.formatCurrency(item.valorUnitario)}</td>
+                                <td>${this.formatCurrency(item.total)}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
                 
                 <div class="total">
-                    <p>Subtotal: R$ ${orcamento.subtotal.toFixed(2)}</p>
-                    <p>Desconto (${orcamento.desconto}%): R$ ${(orcamento.subtotal * (orcamento.desconto / 100)).toFixed(2)}</p>
-                    <p><strong>Total: R$ ${orcamento.total.toFixed(2)}</strong></p>
+                    <p>Subtotal: ${this.formatCurrency(orcamento.subtotal)}</p>
+                    <p>Desconto (${orcamento.desconto}%): ${this.formatCurrency(orcamento.subtotal * (orcamento.desconto / 100))}</p>
+                    <p><strong>Total: ${this.formatCurrency(orcamento.total)}</strong></p>
                 </div>
                 
                 <div class="info">

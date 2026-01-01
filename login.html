@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login • Izak Gestão</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f7fb; }
+      .auth-container { background:#fff; width:100%; max-width:520px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.08); overflow:hidden; }
+      .auth-header { display:flex; border-bottom:1px solid #eee; }
+      .auth-tab { flex:1; padding:14px; text-align:center; cursor:pointer; font-weight:600; color:#444; background:#fafafa; }
+      .auth-tab.active { background:#fff; color:#1f6feb; border-bottom:2px solid #1f6feb; }
+      .auth-content { padding:22px; }
+      .form-group { margin-bottom:14px; }
+      .form-group label { display:block; margin-bottom:6px; font-size:14px; color:#333; }
+      .form-group input, .form-group select { width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:14px; }
+      .form-actions { display:flex; gap:10px; margin-top:14px; }
+      .btn-primary { background:#1f6feb; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+      .btn-secondary { background:#666; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+      .helper { font-size:13px; color:#666; margin-top:8px; }
+      .logo-wrap { display:flex; align-items:center; gap:10px; padding:14px; }
+      .logo-wrap img { height:40px; }
+      .error { color:#c0392b; font-size:13px; margin-top:6px; }
+      .success { color:#27ae60; font-size:13px; margin-top:6px; }
+      .hidden { display:none; }
+    </style>
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="logo-wrap">
+        <img src="./assets/Logo1.png" alt="Izak" />
+        <strong>Izak Comunicação Visual • Gestão</strong>
+      </div>
+      <div class="auth-header">
+        <div class="auth-tab active" data-tab="login">Entrar</div>
+        <div class="auth-tab" data-tab="register">Cadastrar</div>
+        <div class="auth-tab" data-tab="reset">Recuperar Acesso</div>
+      </div>
+      <div class="auth-content">
+        <!-- Login -->
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-user">Usuário ou E-mail</label>
+            <input id="login-user" type="text" required />
+          </div>
+          <div class="form-group">
+            <label for="login-pass">Senha</label>
+            <input id="login-pass" type="password" required />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Entrar</button>
+          </div>
+          <div id="login-msg" class="helper"></div>
+        </form>
+        
+        <!-- Register -->
+        <form id="register-form" class="hidden">
+          <div class="form-group">
+            <label for="reg-user">Usuário</label>
+            <input id="reg-user" type="text" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-email">E-mail (opcional)</label>
+            <input id="reg-email" type="email" />
+          </div>
+          <div class="form-group">
+            <label for="reg-pass">Senha</label>
+            <input id="reg-pass" type="password" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-pass2">Confirmar Senha</label>
+            <input id="reg-pass2" type="password" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-q">Pergunta de Recuperação</label>
+            <select id="reg-q" required>
+              <option value="">Selecione...</option>
+              <option value="pet">Nome do seu primeiro pet</option>
+              <option value="mae">Nome da sua mãe</option>
+              <option value="cidade">Cidade onde nasceu</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="reg-a">Resposta</label>
+            <input id="reg-a" type="text" required />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Cadastrar</button>
+          </div>
+          <div id="register-msg" class="helper"></div>
+        </form>
+        
+        <!-- Reset (Resposta ou Código por E-mail) -->
+        <form id="reset-form" class="hidden">
+          <div class="form-group">
+            <label for="reset-user">Usuário ou E-mail</label>
+            <input id="reset-user" type="text" required />
+          </div>
+
+          <div class="form-group">
+            <label>Método de recuperação</label>
+            <select id="reset-method">
+              <option value="answer">Resposta da pergunta</option>
+              <option value="email">Código por e-mail</option>
+            </select>
+          </div>
+
+          <div id="reset-by-answer">
+            <div class="form-group">
+              <label for="reset-a">Resposta da Pergunta</label>
+              <input id="reset-a" type="text" />
+            </div>
+            <div class="form-group">
+              <label for="reset-pass">Nova Senha</label>
+              <input id="reset-pass" type="password" />
+            </div>
+            <div class="form-actions">
+              <button id="reset-answer-btn" type="button" class="btn-primary">Redefinir por resposta</button>
+            </div>
+          </div>
+
+          <div id="reset-by-email" class="hidden">
+            <div class="form-group">
+              <button id="send-code-btn" type="button" class="btn-secondary">Enviar código para e-mail</button>
+            </div>
+            <div class="form-group">
+              <label for="reset-code">Código recebido</label>
+              <input id="reset-code" type="text" />
+            </div>
+            <div class="form-group">
+              <label for="reset-pass-email">Nova Senha</label>
+              <input id="reset-pass-email" type="password" />
+            </div>
+            <div class="form-actions">
+              <button id="reset-code-btn" type="button" class="btn-primary">Redefinir por código</button>
+            </div>
+          </div>
+
+          <div id="reset-msg" class="helper"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Opcional: EmailJS para envio de e-mails sem backend -->
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+    <script>
+      // Configure suas chaves se usar EmailJS (opcional)
+      window.EMAILJS_PUBLIC_KEY = '';
+      window.EMAILJS_SERVICE_ID = '';
+      window.EMAILJS_TEMPLATE_ID = '';
+      try { if (window.EMAILJS_PUBLIC_KEY) emailjs.init(window.EMAILJS_PUBLIC_KEY); } catch {}
+    </script>
+    <script src="modules/auth.js"></script>
+    <script>
+      // Tabs
+      document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.getAttribute('data-tab');
+          document.getElementById('login-form').classList.toggle('hidden', target !== 'login');
+          document.getElementById('register-form').classList.toggle('hidden', target !== 'register');
+          document.getElementById('reset-form').classList.toggle('hidden', target !== 'reset');
+        });
+      });
+
+      // Login
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const user = document.getElementById('login-user').value.trim();
+        const pass = document.getElementById('login-pass').value;
+        const ok = await Auth.login(user, pass);
+        const msg = document.getElementById('login-msg');
+        if (ok) {
+          msg.textContent = 'Login realizado. Redirecionando...';
+          msg.className = 'helper success';
+          setTimeout(() => window.location.href = 'index.html', 500);
+        } else {
+          msg.textContent = 'Usuário/senha inválidos.';
+          msg.className = 'helper error';
+        }
+      });
+
+      // Register
+      document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const u = document.getElementById('reg-user').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const p1 = document.getElementById('reg-pass').value;
+        const p2 = document.getElementById('reg-pass2').value;
+        const q = document.getElementById('reg-q').value;
+        const a = document.getElementById('reg-a').value.trim();
+        const msg = document.getElementById('register-msg');
+        if (p1 !== p2) {
+          msg.textContent = 'As senhas não conferem.';
+          msg.className = 'helper error';
+          return;
+        }
+        const ok = await Auth.register({ username: u, email, password: p1, recoveryQuestion: q, recoveryAnswer: a });
+        if (ok) {
+          msg.textContent = 'Cadastro realizado. Você já pode entrar.';
+          msg.className = 'helper success';
+          // Alterna para login
+          document.querySelector('[data-tab="login"]').click();
+          document.getElementById('login-user').value = u;
+        } else {
+          msg.textContent = 'Usuário ou e-mail já cadastrado.';
+          msg.className = 'helper error';
+        }
+      });
+
+      // Reset: alternar método
+      document.getElementById('reset-method').addEventListener('change', (e) => {
+        const m = e.target.value;
+        document.getElementById('reset-by-answer').classList.toggle('hidden', m !== 'answer');
+        document.getElementById('reset-by-email').classList.toggle('hidden', m !== 'email');
+      });
+
+      // Reset por resposta
+      document.getElementById('reset-answer-btn').addEventListener('click', async () => {
+        const user = document.getElementById('reset-user').value.trim();
+        const ans = document.getElementById('reset-a').value.trim();
+        const newPass = document.getElementById('reset-pass').value;
+        const msg = document.getElementById('reset-msg');
+        const ok = await Auth.resetPassword(user, ans, newPass);
+        if (ok) {
+          msg.textContent = 'Senha redefinida por resposta. Faça login com a nova senha.';
+          msg.className = 'helper success';
+          document.querySelector('[data-tab="login"]').click();
+        } else {
+          msg.textContent = 'Não foi possível redefinir. Verifique usuário e resposta.';
+          msg.className = 'helper error';
+        }
+      });
+
+      // Enviar código por e-mail
+      document.getElementById('send-code-btn').addEventListener('click', async () => {
+        const user = document.getElementById('reset-user').value.trim();
+        const msg = document.getElementById('reset-msg');
+        const res = await Auth.requestRecoveryCode(user);
+        if (res.ok) {
+          msg.textContent = res.sent ? 'Código enviado para o e-mail cadastrado.' : 'Código gerado. Verifique seu cliente de e-mail.';
+          msg.className = 'helper success';
+        } else {
+          msg.textContent = 'Usuário/e-mail não encontrado ou sem e-mail cadastrado.';
+          msg.className = 'helper error';
+        }
+      });
+
+      // Redefinir por código
+      document.getElementById('reset-code-btn').addEventListener('click', async () => {
+        const user = document.getElementById('reset-user').value.trim();
+        const code = document.getElementById('reset-code').value.trim();
+        const newPass = document.getElementById('reset-pass-email').value;
+        const msg = document.getElementById('reset-msg');
+        const ok = await Auth.resetPasswordWithCode(user, code, newPass);
+        if (ok) {
+          msg.textContent = 'Senha redefinida por código. Faça login com a nova senha.';
+          msg.className = 'helper success';
+          document.querySelector('[data-tab="login"]').click();
+        } else {
+          msg.textContent = 'Não foi possível redefinir. Código inválido ou expirado.';
+          msg.className = 'helper error';
+        }
+      });
+    </script>
+  </body>
+</html>

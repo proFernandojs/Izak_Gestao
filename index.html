@@ -1,278 +1,1449 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Izak Comunicação Visual - Gestão</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="./assets/Logo1.png">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+      <link rel="stylesheet" href="search-styles.css" />
+    <link rel="icon" href="./assets/Logo1.png" />
+  </head>
+  <body>
     <div class="sidebar">
-        <div class="logo-container">
-            <img class="logo" src="./assets/Logo1.png" alt="Izak Comunicação Visual">
-        </div>
-        <nav>
-            <ul>
-                <li><a href="#" class="active" data-module="dashboard">Dashboard</a></li>
-                <li><a href="#" data-module="orcamentos">Orçamentos</a></li>
-                <li><a href="#" data-module="os">Ordens de Serviço</a></li>
-                <li><a href="#" data-module="financeiro">Financeiro</a></li>
-                <li><a href="#" data-module="estoque">Estoque</a></li>
-                <li><a href="#" data-module="clientes">Clientes</a></li>
-                <li><a href="#" data-module="relatorios">Relatórios</a></li>
-            </ul>
-        </nav>
+      <div class="logo-container">
+        <img
+          class="logo"
+          src="./assets/Logo1.png"
+          alt="Izak Comunicação Visual"
+        />
+      </div>
+      <nav>
+        <ul>
+          <li>
+            <a href="#" class="active" data-module="dashboard">Dashboard</a>
+          </li>
+          <li><a href="#" data-module="orcamentos">Orçamentos</a></li>
+          <li><a href="#" data-module="os">Ordens de Serviço</a></li>
+          <li><a href="#" data-module="financeiro">Financeiro</a></li>
+          <li><a href="#" data-module="estoque">Estoque</a></li>
+          <li><a href="#" data-module="clientes">Clientes</a></li>
+          <li><a href="#" data-module="relatorios">Relatórios</a></li>
+        </ul>
+      </nav>
     </div>
-    
+
     <div class="main-content">
-        <header>
-            <h1 id="module-title">Dashboard</h1>
-            <div class="user-info">
-                <span>Usuário: Admin</span>
-                <button type="button" id="logout-btn">Sair</button>
+      <header>
+        <h1 id="module-title">Dashboard</h1>
+        <div class="user-info">
+          <span>Usuário: Admin</span>
+          <button type="button" id="logout-btn">Sair</button>
+        </div>
+      </header>
+
+      <div id="module-content">
+        <!-- Conteúdo dos módulos será carregado aqui -->
+        <div class="dashboard" data-module="dashboard">
+          <div class="stats-card">
+            <h3>Orçamentos Hoje</h3>
+            <p id="orcamentos-hoje">0</p>
+            <div class="chart-container">
+              <canvas id="chart-orcamentos"></canvas>
             </div>
-        </header>
-        
-        <div id="module-content">
-             <!-- Conteúdo dos módulos será carregado aqui -->
-            <div class="dashboard" data-module="dashboard">
-                <div class="stats-card">
-                    <h3>Orçamentos Hoje</h3>
-                    <p id="orcamentos-hoje">0</p>
-                </div>
-                <div class="stats-card">
-                    <h3>OS em Andamento</h3>
-                    <p id="os-andamento">0</p>
-                </div>
-                <div class="stats-card">
-                    <h3>Contas a Receber</h3>
-                    <p id="contas-receber">R$ 0,00</p>
-                </div>
+          </div>
+          <div class="stats-card">
+            <h3>OS em Andamento</h3>
+            <p id="os-andamento">0</p>
+            <div class="chart-container">
+              <canvas id="chart-os"></canvas>
             </div>
-            
-            <!-- Conteúdo do módulo de estoque -->
-            <div class="estoque-module hidden" data-module="estoque">
-                <div class="module-header">
-                    <h2>Controle de Estoque</h2>
-                    <button type="button" id="add-item-btn" class="btn-primary">+ Adicionar Item</button>
-                </div>
-                
-                <div id="estoque-list-container">
-                    <div class="estoque-filters">
-                        <input type="text" id="search-item" placeholder="Pesquisar item..." aria-label="Pesquisar itens no estoque">
-                        <label for="filter-category" class="sr-only">Filtrar por categoria</label>
-                         <select id="filter-category" aria-label="Selecione uma categoria para filtrar">
-                        <option value="">Todas categorias</option>
-                        </select>
-                    </div>
-                    
-                    <div id="estoque-list" class="estoque-list">
-                        <!-- Itens serão carregados aqui via JavaScript -->
-                    </div>
-                </div>
-                
-                <div id="item-form-container" class="hidden">
-                    <div class="item-form-wrapper">
-                        <h3 id="form-title">Adicionar Item</h3>
-                        <form id="item-form">
-                            <input type="hidden" id="item-id">
-                            
-                            <div class="form-group">
-                                <label for="item-nome">Nome do Item*</label>
-                                <input type="text" id="item-nome" name="nome" required>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="item-codigo">Código*</label>
-                                    <input type="text" id="item-codigo" name="codigo" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="item-categoria">Categoria</label>
-                                    <input type="text" id="item-categoria" name="categoria" list="categories">
-                                    <datalist id="categories">
-                                        <!-- Categorias existentes serão preenchidas via JavaScript -->
-                                    </datalist>
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="item-quantidade">Quantidade em Estoque*</label>
-                                    <input type="number" id="item-quantidade" name="quantidade" min="0" step="0.01" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="item-minimo">Estoque Mínimo*</label>
-                                    <input type="number" id="item-minimo" name="minimo" min="0" step="0.01" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="item-preco">Preço Unitário (R$)*</label>
-                                    <input type="number" id="item-preco" name="preco" min="0" step="0.01" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="item-descricao">Descrição</label>
-                                <textarea id="item-descricao" name="descricao" rows="3"></textarea>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="button" id="cancel-item-btn" class="btn-secondary">Cancelar</button>
-                                <button type="submit" class="btn-primary">Salvar Item</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                        <!-- Conteúdo do módulo de orçamentos -->
-<div class="orcamentos-module hidden" data-module="orcamentos">
-    <div class="module-header">
-        <h2>Gerenciamento de Orçamentos</h2>
-        <button id="add-orcamento-btn" class="btn-primary">+ Novo Orçamento</button>
-    </div>
-    
-    <div id="orcamentos-list-container">
-        <div class="orcamentos-filters" role="group" aria-labelledby="filters-orcamento-heading">
-            <h3 id="filters-orcamento-heading" class="sr-only">Filtros de orçamentos</h3>
-            <input type="text" id="search-orcamento" placeholder="Pesquisar orçamento..." aria-label="Pesquisar orçamentos">
-            <select id="filter-status" aria-label="Filtrar por status">
+          </div>
+          <div class="stats-card">
+            <h3>Contas a Receber</h3>
+            <p id="contas-receber">R$ 0,00</p>
+            <div class="chart-container">
+              <canvas id="chart-financeiro"></canvas>
+            </div>
+          </div>
+        </div>
+        <!-- Conteúdo do módulo de Ordens de Serviço -->
+        <div class="os-module hidden" data-module="os">
+          <div class="module-header">
+            <h2>Ordens de Serviço</h2>
+            <div class="header-actions">
+              <button id="add-os-btn" class="btn-primary">+ Nova OS</button>
+              <button id="relatorio-os-btn" class="btn-accent">
+                Relatório
+              </button>
+            </div>
+          </div>
+
+          <div id="os-list-container">
+            <div
+              class="os-filters"
+              role="group"
+              aria-labelledby="filters-os-heading"
+            >
+              <h3 id="filters-os-heading" class="sr-only">
+                Filtros de ordens de serviço
+              </h3>
+              <input
+                type="text"
+                id="search-os"
+                placeholder="Pesquisar OS..."
+                aria-label="Pesquisar ordens de serviço"
+              />
+              <select id="filter-os-status" aria-label="Filtrar por status">
                 <option value="">Todos os status</option>
-                <option value="pendente">Pendente</option>
-                <option value="aprovado">Aprovado</option>
-                <option value="recusado">Recusado</option>
-                <option value="concluido">Concluído</option>
-            </select>
-            <input type="date" id="filter-date" aria-label="Filtrar por data">
-            <button id="clear-filters" class="btn-accent">Limpar Filtros</button>
+                <option value="aberta">Aberta</option>
+                <option value="andamento">Em Andamento</option>
+                <option value="aguardando">Aguardando Aprovação</option>
+                <option value="finalizada">Finalizada</option>
+                <option value="cancelada">Cancelada</option>
+              </select>
+              <select
+                id="filter-os-prioridade"
+                aria-label="Filtrar por prioridade"
+              >
+                <option value="">Todas prioridades</option>
+                <option value="baixa">Baixa</option>
+                <option value="media">Média</option>
+                <option value="alta">Alta</option>
+                <option value="urgente">Urgente</option>
+              </select>
+              <input
+                type="date"
+                id="filter-os-date"
+                aria-label="Filtrar por data"
+              />
+              <button id="clear-os-filters" class="btn-accent">
+                Limpar Filtros
+              </button>
+            </div>
+
+            <div class="os-stats">
+              <div class="stat-item">
+                <span class="stat-label">Abertas</span>
+                <span class="stat-value" id="os-abertas">0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Em Andamento</span>
+                <span class="stat-value" id="os-andamento-stats">0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Atrasadas</span>
+                <span class="stat-value" id="os-atrasadas">0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Finalizadas (Mês)</span>
+                <span class="stat-value" id="os-finalizadas-mes">0</span>
+              </div>
+            </div>
+
+            <div id="os-list" class="os-list">
+              <!-- Ordens de Serviço serão carregadas aqui via JavaScript -->
+            </div>
+          </div>
+
+          <div id="os-form-container" class="hidden">
+            <div class="os-form-wrapper">
+              <h3 id="os-form-title">Nova Ordem de Serviço</h3>
+
+              <form id="os-form">
+                <input type="hidden" id="os-id" />
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="os-numero">Número da OS*</label>
+                    <input
+                      type="text"
+                      id="os-numero"
+                      name="os-numero"
+                      readonly
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="os-data">Data de Abertura*</label>
+                    <input type="date" id="os-data" name="os-data" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="os-orcamento">Vincular Orçamento</label>
+                    <select id="os-orcamento" name="os-orcamento">
+                      <option value="">Selecione um orçamento...</option>
+                      <!-- Orçamentos serão carregados via JavaScript -->
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="os-cliente">Cliente*</label>
+                    <input
+                      type="text"
+                      id="os-cliente"
+                      name="os-cliente"
+                      list="os-clientes-list"
+                      required
+                    />
+                    <datalist id="os-clientes-list">
+                      <!-- Clientes serão carregados via JavaScript -->
+                    </datalist>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="os-contato">Contato do Cliente</label>
+                    <input type="text" id="os-contato" name="os-contato" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="os-descricao">Descrição do Serviço*</label>
+                  <textarea
+                    id="os-descricao"
+                    name="os-descricao"
+                    rows="3"
+                    required
+                  ></textarea>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="os-responsavel">Responsável*</label>
+                    <input
+                      type="text"
+                      id="os-responsavel"
+                      name="os-responsavel"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="os-prioridade">Prioridade*</label>
+                    <select id="os-prioridade" name="os-prioridade" required>
+                      <option value="baixa">Baixa</option>
+                      <option value="media" selected>Média</option>
+                      <option value="alta">Alta</option>
+                      <option value="urgente">Urgente</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="os-status">Status*</label>
+                    <select id="os-status" name="os-status" required>
+                      <option value="aberta">Aberta</option>
+                      <option value="andamento">Em Andamento</option>
+                      <option value="aguardando">Aguardando Aprovação</option>
+                      <option value="finalizada">Finalizada</option>
+                      <option value="cancelada">Cancelada</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="os-data-inicio">Data de Início Prevista</label>
+                    <input
+                      type="date"
+                      id="os-data-inicio"
+                      name="os-data-inicio"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="os-prazo">Prazo de Entrega (dias)*</label>
+                    <input
+                      type="number"
+                      id="os-prazo"
+                      name="os-prazo"
+                      min="1"
+                      value="7"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="os-data-conclusao">Data de Conclusão</label>
+                    <input
+                      type="date"
+                      id="os-data-conclusao"
+                      name="os-data-conclusao"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="os-valor">Valor Total (R$)</label>
+                  <input
+                    type="number"
+                    id="os-valor"
+                    name="os-valor"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="os-materiais">Materiais Necessários</label>
+                  <textarea
+                    id="os-materiais"
+                    name="os-materiais"
+                    rows="3"
+                    placeholder="Liste os materiais necessários para o serviço"
+                  ></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="os-etapas">Etapas do Serviço</label>
+
+                  <div id="os-etapas">
+                    <div class="etapa-item">
+                      <input
+                        type="text"
+                        class="etapa-descricao"
+                        placeholder="Descrição da etapa"
+                      />
+
+                      <select class="etapa-status" aria-label="Status da etapa">
+                        <option value="pendente">Pendente</option>
+                        <option value="andamento">Em Andamento</option>
+                        <option value="concluida">Concluída</option>
+                      </select>
+
+                      <button type="button" class="remove-etapa">
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+
+                  <button type="button" id="add-etapa-btn" class="btn-accent">
+                    + Adicionar Etapa
+                  </button>
+                </div>
+
+                <div class="form-group">
+                  <label for="os-observacoes">Observações</label>
+                  <textarea
+                    id="os-observacoes"
+                    name="os-observacoes"
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    id="cancel-os-btn"
+                    class="btn-secondary"
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" class="btn-primary">Salvar OS</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <!-- Conteúdo do módulo de estoque -->
+        <div class="estoque-module hidden" data-module="estoque">
+          <div class="module-header">
+            <h2>Controle de Estoque</h2>
+            <button type="button" id="add-item-btn" class="btn-primary">
+              + Adicionar Item
+            </button>
+          </div>
+
+          <div id="estoque-list-container">
+            <div class="estoque-filters">
+              <input
+                type="text"
+                id="search-item"
+                placeholder="Pesquisar item..."
+                aria-label="Pesquisar itens no estoque"
+              />
+              <label for="filter-category" class="sr-only"
+                >Filtrar por categoria</label
+              >
+              <select
+                id="filter-category"
+                aria-label="Selecione uma categoria para filtrar"
+              >
+                <option value="">Todas categorias</option>
+              </select>
+            </div>
+
+            <div id="estoque-list" class="estoque-list">
+              <!-- Itens serão carregados aqui via JavaScript -->
+            </div>
+          </div>
+
+          <div id="item-form-container" class="hidden">
+            <div class="item-form-wrapper">
+              <h3 id="form-title">Adicionar Item</h3>
+              <form id="item-form">
+                <input type="hidden" id="item-id" name="id" />
+
+                <div class="form-group">
+                  <label for="item-nome">Nome do Item*</label>
+                  <input type="text" id="item-nome" name="nome" required />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="item-codigo">Código*</label>
+                    <input
+                      type="text"
+                      id="item-codigo"
+                      name="codigo"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="item-categoria">Categoria</label>
+                    <input
+                      type="text"
+                      id="item-categoria"
+                      name="categoria"
+                      list="categories"
+                    />
+                    <datalist id="categories">
+                      <!-- Categorias existentes serão preenchidas via JavaScript -->
+                    </datalist>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="item-quantidade">Quantidade em Estoque*</label>
+                    <input
+                      type="number"
+                      id="item-quantidade"
+                      name="quantidade"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="item-minimo">Estoque Mínimo*</label>
+                    <input
+                      type="number"
+                      id="item-minimo"
+                      name="minimo"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="item-preco">Preço Unitário (R$)*</label>
+                    <input
+                      type="number"
+                      id="item-preco"
+                      name="preco"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="item-custo">Valor de Custo (R$)</label>
+                    <input
+                      type="number"
+                      id="item-custo"
+                      name="custo"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="item-descricao">Descrição</label>
+                  <textarea
+                    id="item-descricao"
+                    name="descricao"
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    id="cancel-item-btn"
+                    class="btn-secondary"
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" class="btn-primary">Salvar Item</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <!-- Conteúdo do módulo de orçamentos -->
+        <div class="orcamentos-module hidden" data-module="orcamentos">
+            <div class="module-header">
+              <h2>Gerenciamento de Orçamentos</h2>
+              <button id="add-orcamento-btn" class="btn-primary">
+                + Novo Orçamento
+              </button>
+            </div>
+
+            <div id="orcamentos-list-container">
+              <div
+                class="orcamentos-filters"
+                role="group"
+                aria-labelledby="filters-orcamento-heading"
+              >
+                <h3 id="filters-orcamento-heading" class="sr-only">
+                  Filtros de orçamentos
+                </h3>
+                <input
+                  type="text"
+                  id="search-orcamento"
+                  placeholder="Pesquisar orçamento..."
+                  aria-label="Pesquisar orçamentos"
+                />
+                <select id="filter-status" aria-label="Filtrar por status">
+                  <option value="">Todos os status</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="aprovado">Aprovado</option>
+                  <option value="recusado">Recusado</option>
+                  <option value="concluido">Concluído</option>
+                </select>
+                <input
+                  type="date"
+                  id="filter-date"
+                  aria-label="Filtrar por data"
+                />
+                <button id="clear-filters" class="btn-accent">
+                  Limpar Filtros
+                </button>
+              </div>
+
+              <div id="orcamentos-list" class="orcamentos-list">
+                <!-- Orçamentos serão carregados aqui via JavaScript -->
+              </div>
+            </div>
+
+            <div id="orcamento-form-container" class="hidden">
+              <div class="orcamento-form-wrapper">
+                <h3 id="orcamento-form-title">Novo Orçamento</h3>
+
+                <div class="form-tabs">
+                  <button
+                    type="button"
+                    class="tab-btn active"
+                    data-tab="cliente"
+                  >
+                    Cliente
+                  </button>
+                  <button type="button" class="tab-btn" data-tab="itens">
+                    Itens
+                  </button>
+                  <button type="button" class="tab-btn" data-tab="pagamento">
+                    Pagamento
+                  </button>
+                </div>
+
+                <form id="orcamento-form">
+                  <input type="hidden" id="orcamento-id" />
+
+                  <!-- Aba Cliente -->
+                  <div id="tab-cliente" class="tab-content active">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="cliente-nome">Nome do Cliente*</label>
+                        <input
+                          type="text"
+                          id="cliente-nome"
+                          name="cliente-nome"
+                          required
+                        />
+                      </div>
+
+                      <div class="form-group">
+                        <label for="cliente-telefone">Telefone</label>
+                        <input
+                          type="tel"
+                          id="cliente-telefone"
+                          name="cliente-telefone"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="cliente-email">E-mail</label>
+                      <input
+                        type="email"
+                        id="cliente-email"
+                        name="cliente-email"
+                      />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="cliente-descricao"
+                        >Descrição do Serviço*</label
+                      >
+                      <textarea
+                        id="cliente-descricao"
+                        name="cliente-descricao"
+                        rows="3"
+                        required
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Aba Itens -->
+                  <div id="tab-itens" class="tab-content">
+                    <div class="itens-container">
+                      <div class="item-header">
+                        <h4>Itens do Orçamento</h4>
+                        <button
+                          type="button"
+                          id="add-orcamento-item-btn"
+                          class="btn-accent"
+                        >
+                          + Adicionar Item
+                        </button>
+                      </div>
+
+                      <div id="itens-list">
+                        <!-- Itens serão adicionados dinamicamente -->
+                      </div>
+
+                      <div class="resumo-valores">
+                        <div class="valor-item">
+                          <span>Subtotal:</span>
+                          <span id="subtotal">R$ 0,00</span>
+                        </div>
+                        <div class="valor-item">
+                          <label for="desconto">Desconto (%):</label>
+                          <input
+                            type="number"
+                            id="desconto"
+                            name="desconto"
+                            min="0"
+                            max="100"
+                            value="0"
+                            step="0.01"
+                          />
+                          <span id="valor-desconto">R$ 0,00</span>
+                        </div>
+                        <div class="valor-item">
+                          <span>Total:</span>
+                          <span id="total" class="valor-total">R$ 0,00</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Aba Pagamento -->
+                  <div id="tab-pagamento" class="tab-content">
+                    <div class="form-group">
+                      <label for="forma-pagamento">Forma de Pagamento*</label>
+                      <select
+                        id="forma-pagamento"
+                        name="forma-pagamento"
+                        required
+                      >
+                        <option value="">Selecione...</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="pix">PIX</option>
+                        <option value="cartao_debito">Cartão de Débito</option>
+                        <option value="cartao_credito">
+                          Cartão de Crédito
+                        </option>
+                        <option value="boleto">Boleto</option>
+                        <option value="transferencia">Transferência</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="prazo-entrega">Prazo de Entrega (dias)</label>
+                      <input
+                        type="number"
+                        id="prazo-entrega"
+                        name="prazo-entrega"
+                        min="1"
+                        value="7"
+                      />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="observacoes">Observações</label>
+                      <textarea
+                        id="observacoes"
+                        name="observacoes"
+                        rows="3"
+                      ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="orcamento-status">Status*</label>
+                      <select
+                        id="orcamento-status"
+                        name="orcamento-status"
+                        required
+                      >
+                        <option value="pendente">Pendente</option>
+                        <option value="aprovado">Aprovado</option>
+                        <option value="recusado">Recusado</option>
+                        <option value="concluido">Concluído</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-actions">
+                    <button
+                      type="button"
+                      id="cancel-orcamento-btn"
+                      class="btn-secondary"
+                    >
+                      Cancelar
+                    </button>
+                    <button type="button" id="prev-tab-btn" class="btn-accent">
+                      Anterior
+                    </button>
+                    <button type="button" id="next-tab-btn" class="btn-primary">
+                      Próximo
+                    </button>
+                    <button
+                      type="submit"
+                      id="submit-orcamento-btn"
+                      class="btn-primary hidden"
+                    >
+                      Salvar Orçamento
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        <div class="clientes-module hidden" data-module="clientes">
+            <div class="module-header">
+                <h2>Gerenciamento de Clientes</h2>
+                <button id="add-cliente-btn" class="btn-primary">+ Novo Cliente</button>
+            </div>
+            
+            <!-- Estatísticas -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Total Clientes</h3>
+                    <p id="total-clientes">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Clientes Ativos</h3>
+                    <p id="clientes-ativos">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Pessoa Jurídica</h3>
+                    <p id="clientes-pj">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Pessoa Física</h3>
+                    <p id="clientes-pf">0</p>
+                </div>
+            </div>
+            
+            <!-- Lista de Clientes -->
+            <div id="clientes-list-container">
+                <div class="clientes-filters">
+                    <div class="search-box">
+                      <input type="text" id="search-cliente" placeholder="Pesquisar cliente..." aria-label="Pesquisar cliente" />
+                      <button type="button" id="search-cliente-btn" class="search-btn" aria-label="Buscar cliente">
+                        🔍
+                      </button>
+                    </div>
+                    <select id="filter-tipo">
+                        <option value="">Todos os tipos</option>
+                        <option value="pf">Pessoa Física</option>
+                        <option value="pj">Pessoa Jurídica</option>
+                    </select>
+                    <select id="filter-status-clientes">
+                        <option value="">Todos os status</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                    <button type="button" id="clear-filters-cliente" class="btn-accent">Limpar Filtros</button>
+                </div>
+                <div id="clientes-list" class="clientes-list"><!-- Clientes aqui --></div>
+            </div>
+            
+            <!-- Formulário de Cliente -->
+            <div id="cliente-form-container" class="hidden">
+                <h2 id="cliente-form-title">Novo Cliente</h2>
+                
+                <!-- Navegação por abas -->
+                <div class="tabs">
+                    <button type="button" class="tab-btn active" data-tab="dados">Dados Cadastrais</button>
+                    <button type="button" class="tab-btn" data-tab="endereco">Endereço</button>
+                    <button type="button" class="tab-btn" data-tab="contato">Contato</button>
+                </div>
+                
+                <form id="cliente-form">
+                    <!-- Aba Dados Cadastrais -->
+                    <div id="tab-dados" class="tab-content active">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tipo-cliente">Tipo de Cliente*</label>
+                                <select id="tipo-cliente" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="pf">Pessoa Física</option>
+                                    <option value="pj">Pessoa Jurídica</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="cliente-status">Status*</label>
+                                <select id="cliente-status" required>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="inativo">Inativo</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="nome-cliente" id="label-nome">Nome/Razão Social*</label>
+                            <input type="text" id="nome-cliente" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="documento-cliente" id="label-documento">CPF/CNPJ*</label>
+                            <input type="text" id="documento-cliente" required>
+                        </div>
+                        
+                        <!-- Campos específicos para Pessoa Física -->
+                        <div id="dados-pf" class="hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="rg-cliente">RG</label>
+                                    <input type="text" id="rg-cliente">
+                                </div>
+                                <div class="form-group">
+                                    <label for="data-nascimento">Data de Nascimento</label>
+                                    <input type="date" id="data-nascimento">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Campos específicos para Pessoa Jurídica -->
+                        <div id="dados-pj" class="hidden">
+                            <div class="form-group">
+                                <label for="nome-fantasia">Nome Fantasia</label>
+                                <input type="text" id="nome-fantasia">
+                            </div>
+                            <div class="form-group">
+                                <label for="inscricao-estadual">Inscrição Estadual</label>
+                                <input type="text" id="inscricao-estadual">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Aba Endereço -->
+                    <div id="tab-endereco" class="tab-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cep">CEP</label>
+                                <input type="text" id="cep" maxlength="9">
+                            </div>
+                            <div class="form-group">
+                                <button type="button" id="buscar-cep" class="btn-accent">Buscar CEP</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="logradouro">Logradouro</label>
+                            <input type="text" id="logradouro">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="numero">Número</label>
+                                <input type="text" id="numero">
+                            </div>
+                            <div class="form-group">
+                                <label for="complemento">Complemento</label>
+                                <input type="text" id="complemento">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="bairro">Bairro</label>
+                            <input type="text" id="bairro">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cidade">Cidade</label>
+                                <input type="text" id="cidade">
+                            </div>
+                            <div class="form-group">
+                                <label for="estado">Estado</label>
+                                <select id="estado">
+                                    <option value="">Selecione...</option>
+                                    <option value="AC">Acre</option>
+                                    <option value="AL">Alagoas</option>
+                                    <option value="AP">Amapá</option>
+                                    <option value="AM">Amazonas</option>
+                                    <option value="BA">Bahia</option>
+                                    <option value="CE">Ceará</option>
+                                    <option value="DF">Distrito Federal</option>
+                                    <option value="ES">Espírito Santo</option>
+                                    <option value="GO">Goiás</option>
+                                    <option value="MA">Maranhão</option>
+                                    <option value="MT">Mato Grosso</option>
+                                    <option value="MS">Mato Grosso do Sul</option>
+                                    <option value="MG">Minas Gerais</option>
+                                    <option value="PA">Pará</option>
+                                    <option value="PB">Paraíba</option>
+                                    <option value="PR">Paraná</option>
+                                    <option value="PE">Pernambuco</option>
+                                    <option value="PI">Piauí</option>
+                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="RN">Rio Grande do Norte</option>
+                                    <option value="RS">Rio Grande do Sul</option>
+                                    <option value="RO">Rondônia</option>
+                                    <option value="RR">Roraima</option>
+                                    <option value="SC">Santa Catarina</option>
+                                    <option value="SP">São Paulo</option>
+                                    <option value="SE">Sergipe</option>
+                                    <option value="TO">Tocantins</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Aba Contato -->
+                    <div id="tab-contato" class="tab-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="telefone">Telefone</label>
+                                <input type="text" id="telefone" maxlength="15">
+                            </div>
+                            <div class="form-group">
+                                <label for="celular">Celular</label>
+                                <input type="text" id="celular" maxlength="15">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">E-mail</label>
+                            <input type="email" id="email">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="site">Website</label>
+                            <input type="text" id="site">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="observacoes-cliente">Observações</label>
+                            <textarea id="observacoes-cliente" rows="4"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Botões de ação -->
+                    <div class="form-actions">
+                        <button type="button" id="cancel-cliente-btn" class="btn-secondary">Cancelar</button>
+                        <button type="button" id="prev-tab-cliente-btn" class="btn-accent hidden">Anterior</button>
+                        <button type="button" id="next-tab-cliente-btn" class="btn-primary">Próximo</button>
+                        <button type="submit" id="submit-cliente-btn" class="btn-primary hidden">Salvar Cliente</button>
+                    </div>
+                </form>
+            </div>
         </div>
         
-        <div id="orcamentos-list" class="orcamentos-list">
-            <!-- Orçamentos serão carregados aqui via JavaScript -->
+        <!-- Conteúdo do módulo financeiro -->
+        <div class="financeiro-module hidden" data-module="financeiro">
+    <div class="module-tabs">
+        <button class="module-tab active" data-finance-tab="dashboard">Dashboard</button>
+        <button class="module-tab" data-finance-tab="receber">Contas a Receber</button>
+        <button class="module-tab" data-finance-tab="pagar">Contas a Pagar</button>
+        <button class="module-tab" data-finance-tab="caixa">Controle de Caixa</button>
+        <button class="module-tab" data-finance-tab="fluxo">Fluxo de Caixa</button>
+    </div>
+    
+    <!-- Dashboard Financeiro -->
+    <div id="finance-dashboard" class="finance-tab-content active">
+        <div class="finance-stats">
+            <div class="finance-card">
+                <h3>Total a Receber</h3>
+                <p id="total-receber" class="valor-positivo">R$ 0,00</p>
+                <small><span id="contas-receber-hoje">0</span> vencendo hoje</small>
+            </div>
+            
+            <div class="finance-card">
+                <h3>Total a Pagar</h3>
+                <p id="total-pagar" class="valor-negativo">R$ 0,00</p>
+                <small><span id="contas-pagar-hoje">0</span> vencendo hoje</small>
+            </div>
+            
+            <div class="finance-card">
+                <h3>Saldo Previsto</h3>
+                <p id="saldo-previsto" class="valor-saldo">R$ 0,00</p>
+                <small>Próximos 30 dias</small>
+            </div>
+            
+            <div class="finance-card">
+                <h3>Caixa Atual</h3>
+                <p id="saldo-caixa" class="valor-saldo">R$ 0,00</p>
+                <small>Último fechamento</small>
+            </div>
+
+            <div class="finance-card">
+                <h3>Lucro do Mês</h3>
+                <p id="lucro-mes" class="valor-positivo">R$ 0,00</p>
+                <small>Mês atual</small>
+            </div>
+        </div>
+        
+        <div class="finance-charts">
+            <div class="finance-chart-container">
+                <h4>Receitas x Despesas (Mês)</h4>
+                <canvas id="receita-despesa-chart"></canvas>
+            </div>
+            
+            <div class="finance-chart-container">
+                <h4>Contas por Status</h4>
+                <canvas id="status-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="finance-alerts">
+            <h4>Alertas e Vencimentos</h4>
+            <div id="alertas-container">
+                <!-- Alertas serão carregados aqui -->
+            </div>
         </div>
     </div>
     
-    <div id="orcamento-form-container" class="hidden">
-        <div class="orcamento-form-wrapper">
-            <h3 id="orcamento-form-title">Novo Orçamento</h3>
-            
-            <div class="form-tabs">
-                <button type="button" class="tab-btn active" data-tab="cliente">Cliente</button>
-                <button type="button" class="tab-btn" data-tab="itens">Itens</button>
-                <button type="button" class="tab-btn" data-tab="pagamento">Pagamento</button>
+    <!-- Contas a Receber -->
+    <div id="finance-receber" class="finance-tab-content">
+        <div class="finance-header">
+            <h3>Contas a Receber</h3>
+            <button id="add-conta-receber-btn" class="btn-primary">+ Nova Conta</button>
+        </div>
+        
+        <div class="finance-filters">
+            <input type="text" id="search-receber" placeholder="Pesquisar..." aria-label="Pesquisar contas a receber">
+            <select id="filter-status-receber" aria-label="Filtrar por status">
+                <option value="">Todos status</option>
+                <option value="pendente">Pendente</option>
+                <option value="pago">Pago</option>
+                <option value="atrasado">Atrasado</option>
+            </select>
+            <input type="month" id="filter-mes-receber" aria-label="Filtrar por mês">
+        </div>
+        
+        <div id="contas-receber-list" class="contas-list">
+            <!-- Contas a receber serão carregadas aqui -->
+        </div>
+    </div>
+    
+    <!-- Contas a Pagar -->
+    <div id="finance-pagar" class="finance-tab-content">
+        <div class="finance-header">
+            <h3>Contas a Pagar</h3>
+            <button id="add-conta-pagar-btn" class="btn-primary">+ Nova Conta</button>
+        </div>
+        
+        <div class="finance-filters">
+            <input type="text" id="search-pagar" placeholder="Pesquisar..." aria-label="Pesquisar contas a pagar">
+            <select id="filter-status-pagar" aria-label="Filtrar por status">
+                <option value="">Todos status</option>
+                <option value="pendente">Pendente</option>
+                <option value="pago">Pago</option>
+                <option value="atrasado">Atrasado</option>
+            </select>
+            <input type="month" id="filter-mes-pagar" aria-label="Filtrar por mês">
+        </div>
+        
+        <div id="contas-pagar-list" class="contas-list">
+            <!-- Contas a pagar serão carregadas aqui -->
+        </div>
+    </div>
+    
+    <!-- Controle de Caixa -->
+    <div id="finance-caixa" class="finance-tab-content">
+        <div class="finance-header">
+            <h3>Controle de Caixa</h3>
+            <div class="caixa-actions">
+                <button id="abrir-caixa-btn" class="btn-primary">Abrir Caixa</button>
+                <button id="fechar-caixa-btn" class="btn-secondary">Fechar Caixa</button>
+                <button id="add-movimentacao-btn" class="btn-accent">+ Movimentação</button>
+            </div>
+        </div>
+        
+        <div class="caixa-status">
+            <div class="caixa-info">
+                <h4>Status do Caixa</h4>
+                <p id="caixa-status-text">Fechado</p>
+                <p id="caixa-saldo-atual">Saldo: R$ 0,00</p>
+                <p id="caixa-abertura">Última abertura: --/--/----</p>
             </div>
             
-            <form id="orcamento-form">
-                <input type="hidden" id="orcamento-id">
-                
-                <!-- Aba Cliente -->
-                <div id="tab-cliente" class="tab-content active">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cliente-nome">Nome do Cliente*</label>
-                            <input type="text" id="cliente-nome" name="cliente-nome" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="cliente-telefone">Telefone</label>
-                            <input type="tel" id="cliente-telefone" name="cliente-telefone">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="cliente-email">E-mail</label>
-                        <input type="email" id="cliente-email" name="cliente-email">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="cliente-descricao">Descrição do Serviço*</label>
-                        <textarea id="cliente-descricao" name="cliente-descricao" rows="3" required></textarea>
-                    </div>
+            <div class="caixa-resumo">
+                <h4>Resumo do Dia</h4>
+                <div class="resumo-item">
+                    <span>Entradas:</span>
+                    <span id="entradas-dia" class="valor-positivo">R$ 0,00</span>
                 </div>
-                
-                <!-- Aba Itens -->
-                <div id="tab-itens" class="tab-content">
-                    <div class="itens-container">
-                        <div class="item-header">
-                            <h4>Itens do Orçamento</h4>
-                            <button type="button" id="add-item-btn" class="btn-accent">+ Adicionar Item</button>
-                        </div>
-                        
-                        <div id="itens-list">
-                            <!-- Itens serão adicionados dinamicamente -->
-                        </div>
-                        
-                        <div class="resumo-valores">
-                            <div class="valor-item">
-                                <span>Subtotal:</span>
-                                <span id="subtotal">R$ 0,00</span>
-                            </div>
-                            <div class="valor-item">
-                                <label for="desconto">Desconto (%):</label>
-                                <input type="number" id="desconto" name="desconto" min="0" max="100" value="0" step="0.01">
-                                <span id="valor-desconto">R$ 0,00</span>
-                            </div>
-                            <div class="valor-item">
-                                <span>Total:</span>
-                                <span id="total" class="valor-total">R$ 0,00</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="resumo-item">
+                    <span>Saídas:</span>
+                    <span id="saidas-dia" class="valor-negativo">R$ 0,00</span>
                 </div>
-                
-                <!-- Aba Pagamento -->
-                <div id="tab-pagamento" class="tab-content">
-                    <div class="form-group">
-                        <label for="forma-pagamento">Forma de Pagamento*</label>
-                        <select id="forma-pagamento" name="forma-pagamento" required>
-                            <option value="">Selecione...</option>
-                            <option value="dinheiro">Dinheiro</option>
-                            <option value="pix">PIX</option>
-                            <option value="cartao_debito">Cartão de Débito</option>
-                            <option value="cartao_credito">Cartão de Crédito</option>
-                            <option value="boleto">Boleto</option>
-                            <option value="transferencia">Transferência</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="prazo-entrega">Prazo de Entrega (dias)</label>
-                        <input type="number" id="prazo-entrega" name="prazo-entrega" min="1" value="7">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="observacoes">Observações</label>
-                        <textarea id="observacoes" name="observacoes" rows="3"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="orcamento-status">Status*</label>
-                        <select id="orcamento-status" name="orcamento-status" required>
-                            <option value="pendente">Pendente</option>
-                            <option value="aprovado">Aprovado</option>
-                            <option value="recusado">Recusado</option>
-                            <option value="concluido">Concluído</option>
-                        </select>
-                    </div>
+                <div class="resumo-item total">
+                    <span>Saldo do Dia:</span>
+                    <span id="saldo-dia" class="valor-saldo">R$ 0,00</span>
                 </div>
-                
-                <div class="form-actions">
-                    <button type="button" id="cancel-orcamento-btn" class="btn-secondary">Cancelar</button>
-                    <button type="button" id="prev-tab-btn" class="btn-accent">Anterior</button>
-                    <button type="button" id="next-tab-btn" class="btn-primary">Próximo</button>
-                    <button type="submit" id="submit-orcamento-btn" class="btn-primary hidden">Salvar Orçamento</button>
+            </div>
+        </div>
+        
+        <div id="movimentacoes-list" class="movimentacoes-list">
+            <!-- Movimentações serão carregadas aqui -->
+        </div>
+    </div>
+    
+    <!-- Fluxo de Caixa -->
+    <div id="finance-fluxo" class="finance-tab-content">
+        <div class="finance-header">
+            <h3>Fluxo de Caixa</h3>
+            <div class="fluxo-periodo">
+                <label for="periodo-fluxo">Período:</label>
+                <select id="periodo-fluxo">
+                    <option value="30">Próximos 30 dias</option>
+                    <option value="60">Próximos 60 dias</option>
+                    <option value="90">Próximos 90 dias</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+                <div id="custom-periodo" class="hidden">
+                    <input type="date" id="data-inicio">
+                    <span>até</span>
+                    <input type="date" id="data-fim">
                 </div>
-            </form>
+            </div>
+        </div>
+        
+        <div class="fluxo-chart-container">
+            <canvas id="fluxo-caixa-chart"></canvas>
+        </div>
+        
+        <div class="fluxo-detalhes">
+            <h4>Detalhamento do Período</h4>
+            <div id="fluxo-detalhes-content">
+                <!-- Detalhes do fluxo serão carregados aqui -->
+            </div>
         </div>
     </div>
 </div>
-            </div>
-        </div>
+      </div>
     </div>
 
+<!-- Modal para Conta -->
+<div id="conta-modal" class="modal hidden">
+    <div class="modal-content">
+        <h3 id="modal-title">Nova Conta</h3>
+        <form id="conta-form">
+            <input type="hidden" id="conta-id">
+            <input type="hidden" id="conta-tipo">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="conta-descricao">Descrição*</label>
+                    <input type="text" id="conta-descricao" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="conta-categoria">Categoria</label>
+                    <select id="conta-categoria">
+                        <option value="">Selecione...</option>
+                        <option value="venda">Venda</option>
+                        <option value="servico">Serviço</option>
+                        <option value="aluguel">Aluguel</option>
+                        <option value="salario">Salário</option>
+                        <option value="fornecedor">Fornecedor</option>
+                        <option value="imposto">Imposto</option>
+                        <option value="manutencao">Manutenção</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="conta-valor">Valor (R$)*</label>
+                    <input type="number" id="conta-valor" min="0" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="conta-vencimento">Data de Vencimento*</label>
+                    <input type="date" id="conta-vencimento" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="conta-pagamento">Data de Pagamento/Recebimento</label>
+                <input type="date" id="conta-pagamento">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="conta-cliente">Cliente/Fornecedor</label>
+                    <input type="text" id="conta-cliente">
+                </div>
+                
+                <div class="form-group">
+                    <label for="conta-status">Status</label>
+                    <select id="conta-status">
+                        <option value="pendente">Pendente</option>
+                        <option value="pago">Pago</option>
+                        <option value="atrasado">Atrasado</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="conta-observacoes">Observações</label>
+                <textarea id="conta-observacoes" rows="3"></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" id="cancel-conta-btn" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Movimentação de Caixa -->
+<div id="movimentacao-modal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Nova Movimentação</h3>
+        <form id="movimentacao-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="mov-tipo">Tipo*</label>
+                    <select id="mov-tipo" required>
+                        <option value="">Selecione...</option>
+                        <option value="entrada">Entrada</option>
+                        <option value="saida">Saída</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mov-categoria">Categoria*</label>
+                    <select id="mov-categoria" required>
+                        <option value="">Selecione...</option>
+                        <option value="venda">Venda</option>
+                        <option value="servico">Serviço</option>
+                        <option value="retirada">Retirada</option>
+                        <option value="fornecedor">Fornecedor</option>
+                        <option value="imposto">Imposto</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="mov-valor">Valor (R$)*</label>
+                    <input type="number" id="mov-valor" min="0" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mov-data">Data*</label>
+                    <input type="datetime-local" id="mov-data" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="mov-descricao">Descrição*</label>
+                <input type="text" id="mov-descricao" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="mov-forma-pagamento">Forma de Pagamento</label>
+                <select id="mov-forma-pagamento">
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix">PIX</option>
+                    <option value="cartao">Cartão</option>
+                    <option value="transferencia">Transferência</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="mov-observacoes">Observações</label>
+                <textarea id="mov-observacoes" rows="3"></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" id="cancel-mov-btn" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary">Salvar</button>
+            </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Conteúdo do módulo de relatórios -->
+    <div class="relatorios-module hidden" data-module="relatorios">
+            <div class="module-header">
+                <h2>Relatórios e Análises</h2>
+                <button id="gerar-relatorio-btn" class="btn-primary">Gerar Relatório</button>
+            </div>
+            
+            <div class="relatorios-container">
+                <div class="relatorios-sidebar">
+                    <div class="filtros-relatorio">
+                        <h3>Filtros do Relatório</h3>
+                        
+                        <div class="form-group">
+                            <label for="tipo-relatorio">Tipo de Relatório*</label>
+                            <select id="tipo-relatorio" name="tipo-relatorio" required>
+                                <option value="">Selecione o tipo</option>
+                                <option value="financeiro">Financeiro</option>
+                                <option value="vendas">Vendas</option>
+                                <option value="estoque">Estoque</option>
+                                <option value="producao">Produção</option>
+                                <option value="clientes">Clientes</option>
+                                <option value="lucro-prejuizo">Lucro/Prejuízo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="periodo">Período*</label>
+                            <select id="periodo" name="periodo" required>
+                                <option value="">Selecione o período</option>
+                                <option value="hoje">Hoje</option>
+                                <option value="semana">Esta semana</option>
+                                <option value="mes">Este mês</option>
+                                <option value="trimestre">Este trimestre</option>
+                                <option value="semestre">Este semestre</option>
+                                <option value="ano">Este ano</option>
+                                <option value="personalizado">Personalizado</option>
+                            </select>
+                        </div>
+                        
+                        <div id="periodo-personalizado" class="hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="data-inicio">Data Início</label>
+                                    <input type="date" id="data-inicio" name="data-inicio">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="data-fim">Data Fim</label>
+                                    <input type="date" id="data-fim" name="data-fim">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="formato-relatorio">Formato de Saída</label>
+                            <select id="formato-relatorio" name="formato-relatorio">
+                                <option value="tela">Visualizar na Tela</option>
+                                <option value="pdf">PDF para Imprimir</option>
+                                <option value="excel">Exportar para Excel</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" id="aplicar-filtros-btn" class="btn-primary">Aplicar Filtros</button>
+                        <button type="button" id="limpar-filtros-btn" class="btn-secondary">Limpar Filtros</button>
+                    </div>
+                    
+                    <div class="relatorios-rapidos">
+                        <h3>Relatórios Rápidos</h3>
+                        <button class="relatorio-rapido" data-tipo="orcamentos-hoje">Orçamentos Hoje</button>
+                        <button class="relatorio-rapido" data-tipo="os-pendentes">OS Pendentes</button>
+                        <button class="relatorio-rapido" data-tipo="estoque-minimo">Estoque Mínimo</button>
+                        <button class="relatorio-rapido" data-tipo="receber-mes">A Receber Este Mês</button>
+                        <button class="relatorio-rapido" data-tipo="pagar-mes">A Pagar Este Mês</button>
+                    </div>
+                </div>
+                
+                <div class="relatorios-content">
+                    <div id="relatorio-resultado">
+                        <div class="relatorio-vazio">
+                            <div class="vazio-icon">📊</div>
+                            <h3>Nenhum relatório gerado</h3>
+                            <p>Selecione os filtros e clique em "Gerar Relatório" para visualizar os dados.</p>
+                        </div>
+                        
+                        <div id="relatorio-conteudo" class="hidden">
+                            <div class="relatorio-header">
+                                <div class="relatorio-titulo">
+                                    <h3 id="relatorio-titulo"></h3>
+                                    <p id="relatorio-periodo"></p>
+                                </div>
+                                <div class="relatorio-acoes">
+                                    <button id="imprimir-relatorio" class="btn-accent">🖨️ Imprimir</button>
+                                    <button id="exportar-relatorio" class="btn-primary">📥 Exportar</button>
+                                </div>
+                            </div>
+                            
+                            <div class="relatorio-body">
+                                <!-- Conteúdo será gerado dinamicamente -->
+                                <div id="relatorio-resumo" class="relatorio-resumo"></div>
+                                <div id="relatorio-detalhes" class="relatorio-detalhes"></div>
+                                <div id="relatorio-graficos" class="relatorio-graficos"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="relatorio-estatisticas" class="relatorio-estatisticas">
+                        <h3>Estatísticas Rápidas</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Receita Mensal</span>
+                                    <span class="stat-value" id="receita-mensal">R$ 0,00</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">📈</div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Orçamentos</span>
+                                    <span class="stat-value" id="total-orcamentos">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">⚙️</div>
+                                <div class="stat-info">
+                                    <span class="stat-label">OS em Andamento</span>
+                                    <span class="stat-value" id="os-andamento-rel">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">📦</div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Itens em Estoque</span>
+                                    <span class="stat-value" id="itens-estoque">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    <!-- Carregamento do Chart.js: preferir local; app.js faz fallback para CDN quando necessário -->
+    <!-- <script src="assets/chart.umd.min.js"></script> -->
     <script src="app.js"></script>
     <script src="modules/estoque.js"></script>
-</body>
+    <script src="modules/orcamentos.js"></script>
+    <script src="modules/clientes.js" defer></script>
+    <script src="modules/os.js"></script>
+    <script src="modules/financeiro.js"></script>
+    <script src="modules/relatorios.js"></script>
+  </body>
 </html>
+
+
+

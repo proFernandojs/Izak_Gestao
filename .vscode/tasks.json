@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Patch app.js selectors",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$content = Get-Content -Raw 'd:\\GraficaHome\\app.js'; $content = $content -replace '#module-content > \\[data-module\\]', '#module-content [data-module]'; Set-Content 'd:\\GraficaHome\\app.js' $content; Write-Output 'Selectors updated'"
+			],
+			"problemMatcher": [
+				"$eslint-stylish"
+			]
+		}
+	]
+}

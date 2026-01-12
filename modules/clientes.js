@@ -817,9 +817,11 @@ const ClientesModule = {
         if(!cliente) return;
         
         // Orçamentos deste cliente
-        const orcamentosCliente = IzakGestao.data.orcamentos.filter(o => 
-            o.cliente.nome.toLowerCase().includes(cliente.nome.toLowerCase())
-        );
+        const orcamentosCliente = IzakGestao.data.orcamentos.filter(o => {
+            const sameId = o?.clienteId && o.clienteId === cliente.id;
+            const sameName = o?.cliente?.nome && cliente?.nome && o.cliente.nome.toLowerCase() === cliente.nome.toLowerCase();
+            return sameId || sameName;
+        });
         
         let mensagem = `Histórico de ${cliente.nome}\n\n`;
         mensagem += `Total de Orçamentos: ${orcamentosCliente.length}\n\n`;

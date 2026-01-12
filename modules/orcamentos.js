@@ -24,6 +24,17 @@ const OrcamentosModule = {
         if(!text) return 0;
         return Number(text.replace(/[^0-9,-]/g, '').replace('.', '').replace(',', '.')) || 0;
     },
+
+    getClienteById: function(id) {
+        if(!id) return null;
+        return (IzakGestao?.data?.clientes || []).find(c => c.id === id) || null;
+    },
+
+    findClienteByName: function(nome) {
+        if(!nome) return null;
+        const normalized = nome.toLowerCase();
+        return (IzakGestao?.data?.clientes || []).find(c => (c.nome || '').toLowerCase() === normalized) || null;
+    },
     
     init: function() {
         console.log('OrcamentosModule iniciando...');
@@ -31,12 +42,39 @@ const OrcamentosModule = {
         if (this.initialized) {
             console.log('OrcamentosModule já inicializado, apenas atualizando lista');
             this.renderOrcamentosList();
+            this.populateClientesSelect();
+            this.updateClientesOrcamentos();
             return;
         }
         this.initialized = true;
         this.renderOrcamentosList();
+        this.populateClientesSelect();
+        this.updateClientesOrcamentos();
         this.bindEvents();
         this.initForm();
+    },
+
+    populateClientesSelect: function(selectedId = '') {
+        const select = document.getElementById('cliente-select');
+        if(!select) return;
+
+        const clientes = [...(IzakGestao?.data?.clientes || [])].sort((a, b) =>
+            (a.nome || '').localeCompare(b.nome || '')
+        );
+
+        select.innerHTML = '<option value="">Selecione um cliente existente...</option>';
+
+        clientes.forEach(cliente => {
+            const option = document.createElement('option');
+            option.value = cliente.id;
+            const telefone = cliente?.contato?.telefone || cliente?.contato?.celular || 'Sem telefone';
+            option.textContent = `${cliente.nome} (${telefone})`;
+            select.appendChild(option);
+        });
+
+        if(selectedId) {
+            select.value = selectedId;
+        }
     },
     
     bindEvents: function() {
@@ -49,6 +87,24 @@ const OrcamentosModule = {
                 e.stopPropagation(); // Previne propagação
                 console.log('Clique no botão Novo Orçamento');
                 this.showOrcamentoForm();
+            });
+        }
+
+        const clienteSelect = document.getElementById('cliente-select');
+        if(clienteSelect) {
+            clienteSelect.addEventListener('change', (e) => {
+                const cliente = this.getClienteById(e.target.value);
+                this.handleClienteSelection(cliente);
+            });
+        }
+
+        const clienteNomeInput = document.getElementById('cliente-nome');
+        if(clienteNomeInput) {
+            clienteNomeInput.addEventListener('input', () => {
+                const hiddenId = document.getElementById('orcamento-cliente-id');
+                if(hiddenId && !clienteNomeInput.value) {
+                    hiddenId.value = '';
+                }
             });
         }
         
@@ -203,6 +259,26 @@ const OrcamentosModule = {
         
         console.log('Listener de adicionar item vinculado com sucesso');
     },
+
+    handleClienteSelection: function(cliente) {
+        const hiddenId = document.getElementById('orcamento-cliente-id');
+        if(hiddenId) {
+            hiddenId.value = cliente ? cliente.id : '';
+        }
+
+        if(!cliente) return;
+
+        const telefone = cliente?.contato?.telefone || cliente?.contato?.celular || '';
+        const email = cliente?.contato?.email || '';
+
+        const nomeInput = document.getElementById('cliente-nome');
+        const telefoneInput = document.getElementById('cliente-telefone');
+        const emailInput = document.getElementById('cliente-email');
+
+        if(nomeInput) nomeInput.value = cliente.nome || '';
+        if(telefoneInput) telefoneInput.value = telefone;
+        if(emailInput) emailInput.value = email;
+    },
     
     showOrcamentoForm: function(orcamento = null) {
         console.log('showOrcamentoForm chamado', orcamento ? 'edição' : 'criação');
@@ -211,6 +287,12 @@ const OrcamentosModule = {
         
         const form = document.getElementById('orcamento-form');
         form.reset();
+
+        const hiddenClienteId = document.getElementById('orcamento-cliente-id');
+        if(hiddenClienteId) hiddenClienteId.value = '';
+        this.populateClientesSelect();
+        const clienteSelect = document.getElementById('cliente-select');
+        if(clienteSelect) clienteSelect.value = '';
         
         // Limpa TODOS os itens existentes antes de abrir o formulário
         const itensList = document.getElementById('itens-list');
@@ -223,10 +305,22 @@ const OrcamentosModule = {
             // Modo edição
             console.log('Modo edição - carregando orçamento');
             form.dataset.id = orcamento.id;
+            const clienteId = orcamento.clienteId || this.findClienteByName(orcamento?.cliente?.nome)?.id || '';
+            this.populateClientesSelect(clienteId);
+            if(hiddenClienteId) hiddenClienteId.value = clienteId || '';
+
             document.getElementById('cliente-nome').value = orcamento.cliente.nome;
             document.getElementById('cliente-telefone').value = orcamento.cliente.telefone || '';
             document.getElementById('cliente-email').value = orcamento.cliente.email || '';
             document.getElementById('cliente-descricao').value = orcamento.descricao;
+
+            if(clienteId) {
+                const cliente = this.getClienteById(clienteId);
+                if(cliente) {
+                    this.handleClienteSelection(cliente);
+                    if(clienteSelect) clienteSelect.value = clienteId;
+                }
+            }
             
             // Carrega itens do orçamento
             this.loadItens(orcamento.itens);
@@ -241,6 +335,7 @@ const OrcamentosModule = {
             // Modo criação - adiciona um item inicial vazio
             console.log('Modo criação - adicionando item inicial');
             form.removeAttribute('data-id');
+            this.populateClientesSelect();
             
             // Reseta os campos de totais
             document.getElementById('desconto').value = '0';
@@ -444,6 +539,7 @@ const OrcamentosModule = {
     
     saveOrcamento: function() {
         const form = document.getElementById('orcamento-form');
+        const clienteId = (document.getElementById('orcamento-cliente-id')?.value || '').trim();
         
         // Coleta os itens
         const itens = [];
@@ -473,6 +569,7 @@ const OrcamentosModule = {
         const orcamento = {
             id: form.dataset.id || Date.now().toString(),
             numero: form.dataset.id ? this.getOrcamentoNumero(form.dataset.id) : this.generateOrcamentoNumero(),
+            clienteId: clienteId || null,
             cliente: {
                 nome: document.getElementById('cliente-nome').value,
                 telefone: document.getElementById('cliente-telefone').value,
@@ -500,13 +597,41 @@ const OrcamentosModule = {
         } else {
             IzakGestao.data.orcamentos.push(orcamento);
         }
-        
+
+        this.updateClientesOrcamentos();
         IzakGestao.saveData();
         this.renderOrcamentosList();
         this.hideOrcamentoForm();
         
         // Atualiza dashboard
         IzakGestao.updateDashboard();
+    },
+
+    updateClientesOrcamentos: function() {
+        if(!IzakGestao?.data?.clientes) return;
+        const orcamentos = IzakGestao.data.orcamentos || [];
+
+        IzakGestao.data.clientes.forEach(cliente => {
+            const matchCount = orcamentos.filter(o => {
+                const sameId = o?.clienteId && o.clienteId === cliente.id;
+                const sameName = !o?.clienteId && o?.cliente?.nome && (o.cliente.nome || '').toLowerCase() === (cliente.nome || '').toLowerCase();
+                return sameId || sameName;
+            }).length;
+
+            cliente.totalOrcamentos = matchCount;
+            if(typeof cliente.totalCompras === 'undefined') {
+                cliente.totalCompras = 0;
+            }
+        });
+
+        if(typeof ClientesModule !== 'undefined') {
+            try {
+                ClientesModule.renderClientesList();
+                ClientesModule.updateStats();
+            } catch (e) {
+                console.warn('Falha ao atualizar UI de clientes:', e);
+            }
+        }
     },
     
     generateOrcamentoNumero: function() {
@@ -523,6 +648,7 @@ const OrcamentosModule = {
     deleteOrcamento: function(id) {
         if(confirm('Tem certeza que deseja excluir este orçamento?')) {
             IzakGestao.data.orcamentos = IzakGestao.data.orcamentos.filter(o => o.id !== id);
+            this.updateClientesOrcamentos();
             IzakGestao.saveData();
             this.renderOrcamentosList();
         }

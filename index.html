@@ -557,6 +557,16 @@
 
                   <!-- Aba Cliente -->
                   <div id="tab-cliente" class="tab-content active">
+                    <div class="form-group">
+                      <label for="cliente-select">Usar cliente cadastrado</label>
+                      <select id="cliente-select" name="cliente-select">
+                        <option value="">Selecione um cliente existente...</option>
+                      </select>
+                      <small>Ao selecionar, os dados do cliente são preenchidos automaticamente.</small>
+                    </div>
+
+                    <input type="hidden" id="orcamento-cliente-id" />
+
                     <div class="form-row">
                       <div class="form-group">
                         <label for="cliente-nome">Nome do Cliente*</label>

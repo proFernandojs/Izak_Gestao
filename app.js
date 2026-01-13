@@ -451,4 +451,46 @@ const IzakGestao = {
 // Inicializa o aplicativo quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
     IzakGestao.init();
+    
+    // Menu móvel toggle
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const navLinks = document.querySelectorAll('.sidebar nav a');
+    
+    if (mobileMenuToggle && sidebar && sidebarOverlay) {
+        // Abrir menu
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            mobileMenuToggle.setAttribute('aria-label', 'Fechar menu');
+        });
+        
+        // Fechar menu ao clicar no overlay
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            mobileMenuToggle.setAttribute('aria-label', 'Abrir menu');
+        });
+        
+        // Fechar menu ao clicar em um link
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    mobileMenuToggle.setAttribute('aria-label', 'Abrir menu');
+                }
+            });
+        });
+        
+        // Fechar menu ao pressionar ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                mobileMenuToggle.setAttribute('aria-label', 'Abrir menu');
+            }
+        });
+    }
 });

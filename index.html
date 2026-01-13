@@ -9,7 +9,15 @@
     <link rel="icon" href="./assets/Logo1.png" />
   </head>
   <body>
-    <div class="sidebar">
+    <!-- Menu Toggle Button para Mobile -->
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Abrir menu">
+      ☰
+    </button>
+    
+    <!-- Overlay para fechar sidebar no mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    
+    <div class="sidebar" id="sidebar">
       <div class="logo-container">
         <img
           class="logo"

@@ -6,7 +6,7 @@
     <title>Login • Izak Gestão</title>
     <link rel="stylesheet" href="style.css" />
     <style>
-      body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f7fb; }
+      body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#f5f7fb; padding: 15px; }
       .auth-container { background:#fff; width:100%; max-width:520px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.08); overflow:hidden; }
       .auth-header { display:flex; border-bottom:1px solid #eee; }
       .auth-tab { flex:1; padding:14px; text-align:center; cursor:pointer; font-weight:600; color:#444; background:#fafafa; }
@@ -24,6 +24,26 @@
       .error { color:#c0392b; font-size:13px; margin-top:6px; }
       .success { color:#27ae60; font-size:13px; margin-top:6px; }
       .hidden { display:none; }
+      
+      /* Responsividade para Login */
+      @media (max-width: 768px) {
+        .auth-container { max-width: 100%; margin: 10px; }
+        .logo-wrap { flex-direction: column; text-align: center; }
+        .logo-wrap strong { font-size: 14px; }
+        .auth-tab { padding: 12px 8px; font-size: 13px; }
+      }
+      
+      @media (max-width: 480px) {
+        body { padding: 10px; }
+        .auth-content { padding: 15px; }
+        .logo-wrap { padding: 10px; }
+        .logo-wrap img { height: 30px; }
+        .logo-wrap strong { font-size: 12px; }
+        .auth-tab { padding: 10px 5px; font-size: 12px; }
+        .form-group input, .form-group select { font-size: 16px !important; padding: 12px; }
+        .btn-primary, .btn-secondary { width: 100%; padding: 12px; font-size: 15px; }
+        .form-actions { flex-direction: column; }
+      }
     </style>
   </head>
   <body>

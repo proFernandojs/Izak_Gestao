@@ -2115,8 +2115,34 @@ header {
     margin-top: 5px;
 }
 
-/* Responsividade */
-@media (max-width: 1200px) {
+/* ========================================
+   RESPONSIVIDADE - Mobile, Tablet e Desktop
+   ======================================== */
+
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1001;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+/* Tablets e dispositivos menores (1024px e abaixo) */
+@media (max-width: 1024px) {
+    /* Dashboard grid - 2 colunas em tablets */
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Relatorios */
     .relatorios-container {
         flex-direction: column;
     }
@@ -2130,9 +2156,147 @@ header {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+    
+    /* Formulários */
+    .form-row {
+        flex-direction: column;
+    }
+    
+    /* Estoque items */
+    .estoque-item {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .item-actions {
+        justify-content: flex-start;
+    }
 }
 
+/* Tablets pequenos e smartphones em landscape (768px e abaixo) */
 @media (max-width: 768px) {
+    /* Sidebar transformada em menu móvel */
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000;
+        width: 250px;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    /* Overlay para quando sidebar está aberta */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    /* Main content ocupa toda largura */
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 70px 15px 15px;
+    }
+    
+    /* Mobile menu toggle visível */
+    .mobile-menu-toggle {
+        display: block;
+    }
+    
+    /* Header */
+    header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    #module-title {
+        font-size: 1.5em;
+    }
+    
+    .user-info {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    /* Dashboard - 1 coluna em mobile */
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Stats cards */
+    .stats-card {
+        padding: 15px;
+    }
+    
+    /* Tabelas responsivas */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Filtros em coluna */
+    .estoque-filters,
+    .filters {
+        flex-direction: column;
+    }
+    
+    .estoque-filters input,
+    .estoque-filters select {
+        width: 100%;
+    }
+    
+    /* Forms */
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .form-row .form-group {
+        width: 100%;
+    }
+    
+    /* Buttons */
+    .form-actions,
+    .item-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .form-actions button,
+    .item-actions button {
+        width: 100%;
+    }
+    
+    /* Module header */
+    .module-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    /* Charts */
+    .chart-container {
+        max-width: 100%;
+    }
+    
+    /* Relatorios */
     .relatorio-resumo,
     .stats-grid {
         grid-template-columns: 1fr;
@@ -2141,5 +2305,126 @@ header {
     .relatorio-header {
         flex-direction: column;
         gap: 15px;
+    }
+    
+    /* Modal */
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    /* Clientes list */
+    .cliente-item {
+        grid-template-columns: 1fr;
+    }
+    
+    /* OS list */
+    .os-item {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Smartphones pequenos (480px e abaixo) */
+@media (max-width: 480px) {
+    /* Reduzir padding geral */
+    .main-content {
+        padding: 60px 10px 10px;
+    }
+    
+    /* Títulos menores */
+    #module-title {
+        font-size: 1.2em;
+    }
+    
+    header h1 {
+        font-size: 1.2em;
+    }
+    
+    /* Cards com menos padding */
+    .stats-card {
+        padding: 12px;
+    }
+    
+    .stats-card h3 {
+        font-size: 14px;
+    }
+    
+    .stats-card p {
+        font-size: 20px;
+    }
+    
+    /* Botões menores */
+    .btn-primary,
+    .btn-secondary {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    /* Inputs com fonte mínima de 16px para evitar zoom automático no iOS */
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+        padding: 10px;
+    }
+    
+    /* User info */
+    .user-info span {
+        font-size: 14px;
+    }
+    
+    /* Logo menor */
+    .logo {
+        max-width: 120px;
+    }
+    
+    /* Sidebar nav links */
+    .sidebar nav ul li a {
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+    
+    /* Modal ainda menor */
+    .modal-content {
+        width: 98%;
+        padding: 15px;
+    }
+    
+    /* Tables com scroll */
+    table {
+        font-size: 12px;
+    }
+    
+    table th,
+    table td {
+        padding: 8px 5px;
+    }
+}
+
+/* Landscape mode para smartphones */
+@media (max-width: 768px) and (orientation: landscape) {
+    .main-content {
+        padding-top: 70px;
+    }
+    
+    .sidebar {
+        height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+/* Desktop grande (1440px e acima) */
+@media (min-width: 1440px) {
+    .main-content {
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 270px;
+    }
+    
+    .dashboard {
+        grid-template-columns: repeat(4, 1fr);
     }
 }

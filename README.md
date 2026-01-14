@@ -2,7 +2,26 @@
 
 O programa está em teste
 
-## 📱 Responsividade
+## � Autenticação Multi-Dispositivos
+
+✨ **NOVO**: Sistema de autenticação centralizado!
+
+Agora a senha cadastrada funciona em **todos os dispositivos**:
+- 📱 Celular
+- 💻 Tablet
+- 🖥️ Computador
+
+### Como funciona?
+- Todos os dispositivos conectam no mesmo servidor
+- Dados sincronizados automaticamente
+- Funciona offline com fallback local
+- Seguro com senhas hashadas (SHA-256)
+
+📖 **[Guia de Deploy](./DEPLOY.md)** | 📚 **[Documentação Completa](./AUTENTICACAO.md)** | 🧪 **[Testar Localmente](./test-auth.html)**
+
+---
+
+## �📱 Responsividade
 
 O aplicativo agora é **totalmente responsivo** e funciona perfeitamente em:
 

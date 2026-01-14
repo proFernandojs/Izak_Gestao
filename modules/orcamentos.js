@@ -214,6 +214,84 @@ const OrcamentosModule = {
                 this.calcularTotal();
             });
         }
+
+        // Mostrar/ocultar gerador de boleto conforme forma de pagamento
+        const forma = document.getElementById('forma-pagamento');
+        if (forma) {
+            forma.addEventListener('change', () => {
+                this.toggleBoletoUI(forma.value);
+            });
+            // Inicializa estado
+            this.toggleBoletoUI(forma.value);
+        }
+
+        // Emissão de boleto diretamente do formulário de orçamento (teste/mock)
+        const emitirBtn = document.getElementById('emitir-boleto-btn');
+        if (emitirBtn) {
+            emitirBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                try {
+                    const result = await this.emitirBoletoFromForm();
+                    const out = document.getElementById('boleto-result');
+                    if (out) {
+                        out.innerHTML = `Linha digitável: <strong>${result.linhaDigitavel}</strong><br/>` +
+                            (result.pdfUrl ? `<a href="${result.pdfUrl}" target="_blank">Abrir PDF</a>` : '');
+                    }
+                    alert('Boleto emitido!');
+                } catch (err) {
+                    alert('Falha ao emitir boleto: ' + (err?.message || err));
+                }
+            });
+        }
+    },
+
+    toggleBoletoUI: function(forma) {
+        const box = document.getElementById('boleto-actions');
+        if (!box) return;
+        if (forma === 'boleto') {
+            box.classList.remove('hidden');
+            // Default vencimento +7 dias
+            const v = document.getElementById('boleto-vencimento');
+            if (v && !v.value) {
+                const d = new Date();
+                d.setDate(d.getDate() + 7);
+                v.value = d.toISOString().split('T')[0];
+            }
+        } else {
+            box.classList.add('hidden');
+        }
+    },
+
+    emitirBoletoFromForm: async function() {
+        if (typeof BoletoService === 'undefined') throw new Error('BoletoService indisponível');
+        // Monta pagador a partir dos campos do formulário
+        const nome = document.getElementById('cliente-nome')?.value || '';
+        const email = document.getElementById('cliente-email')?.value || '';
+        const telefone = document.getElementById('cliente-telefone')?.value || '';
+        // Tenta buscar CPF/CNPJ do cliente salvo
+        let documento = '';
+        const cid = document.getElementById('orcamento-cliente-id')?.value || '';
+        if (cid) {
+            const cli = (IzakGestao?.data?.clientes || []).find(c => c.id === cid);
+            documento = (cli?.documento || '').replace(/\D/g, '');
+        } else {
+            const nm = (nome || '').toLowerCase();
+            const cli = (IzakGestao?.data?.clientes || []).find(c => (c.nome || '').toLowerCase() === nm);
+            documento = (cli?.documento || '').replace(/\D/g, '');
+        }
+        if (!documento) throw new Error('Cadastre o CPF/CNPJ do cliente em Clientes para emitir boleto.');
+
+        // Valor total atual
+        const totalText = document.getElementById('total')?.textContent || 'R$ 0,00';
+        const valor = this.parseCurrencyText(totalText);
+        // Vencimento e instruções
+        const vencimento = document.getElementById('boleto-vencimento')?.value || new Date().toISOString().split('T')[0];
+        const instrucoes = document.getElementById('boleto-instrucoes')?.value || 'Não receber após 30 dias. Juros 1% a.m.';
+
+        const pagador = { nome, documento, email, telefone };
+        const ref = this.currentOrcamento?.numero || this.generateOrcamentoNumero();
+        const boleto = await BoletoService.emitir({ valor, vencimento, pagador, instrucoes, referencia: ref });
+        return boleto;
     },
     
     attachAddItemButton: function() {
@@ -537,7 +615,7 @@ const OrcamentosModule = {
         document.getElementById('total').textContent = this.formatCurrency(total);
     },
     
-    saveOrcamento: function() {
+    saveOrcamento: async function() {
         const form = document.getElementById('orcamento-form');
         const clienteId = (document.getElementById('orcamento-cliente-id')?.value || '').trim();
         
@@ -605,6 +683,83 @@ const OrcamentosModule = {
         
         // Atualiza dashboard
         IzakGestao.updateDashboard();
+
+        // Se forma de pagamento for boleto, cria conta a receber e emite boleto
+        try {
+            if (orcamento.pagamento?.forma === 'boleto') {
+                // Vencimento padrão: hoje + 7 dias
+                const venc = new Date();
+                venc.setDate(venc.getDate() + 7);
+                const vencStr = venc.toISOString().split('T')[0];
+
+                const conta = {
+                    id: `CR-${Date.now()}`,
+                    descricao: `Orçamento ${orcamento.numero}`,
+                    categoria: 'Vendas',
+                    valor: orcamento.total,
+                    vencimento: vencStr,
+                    dataPagamento: null,
+                    clienteFornecedor: orcamento.cliente?.nome || 'Cliente',
+                    status: 'pendente',
+                    observacoes: `Gerada a partir do orçamento ${orcamento.numero}`,
+                    dataCriacao: new Date().toISOString(),
+                    dataAtualizacao: new Date().toISOString()
+                };
+
+                IzakGestao.data.financeiro.contasReceber.push(conta);
+                IzakGestao.saveData();
+
+                // Emissão automática do boleto (se possível)
+                if (typeof BoletoService !== 'undefined') {
+                    // Buscar cliente para obter documento
+                    let cliente = null;
+                    if (orcamento.clienteId) {
+                        cliente = (IzakGestao?.data?.clientes || []).find(c => c.id === orcamento.clienteId) || null;
+                    } else if (orcamento.cliente?.nome) {
+                        const nm = (orcamento.cliente.nome || '').toLowerCase();
+                        cliente = (IzakGestao?.data?.clientes || []).find(c => (c.nome || '').toLowerCase() === nm) || null;
+                    }
+
+                    if (cliente && cliente.documento) {
+                        const pagador = {
+                            nome: cliente.nome,
+                            documento: (cliente.documento || '').replace(/\D/g, ''),
+                            email: cliente?.contato?.email || orcamento.cliente?.email || '',
+                            telefone: cliente?.contato?.telefone || cliente?.contato?.celular || orcamento.cliente?.telefone || '',
+                            endereco: cliente?.endereco || {}
+                        };
+                        try {
+                            const boleto = await BoletoService.emitir({
+                                valor: conta.valor,
+                                vencimento: conta.vencimento,
+                                pagador,
+                                instrucoes: 'Não receber após 30 dias. Juros 1% a.m.',
+                                referencia: orcamento.numero
+                            });
+                            conta.boleto = {
+                                id: boleto.id,
+                                status: boleto.status,
+                                linhaDigitavel: boleto.linhaDigitavel,
+                                pdfUrl: boleto.pdfUrl,
+                                provider: boleto.provider,
+                                emitidoEm: boleto.createdAt
+                            };
+                            // Persistir atualização
+                            const idx = IzakGestao.data.financeiro.contasReceber.findIndex(c => c.id === conta.id);
+                            if (idx >= 0) IzakGestao.data.financeiro.contasReceber[idx] = conta;
+                            IzakGestao.saveData();
+                            alert('Boleto emitido para este orçamento.');
+                        } catch (err) {
+                            console.warn('Falha ao emitir boleto a partir do orçamento:', err);
+                        }
+                    } else {
+                        alert('Para emitir boleto, cadastre o CPF/CNPJ do cliente em Clientes.');
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Erro no fluxo de boleto do orçamento:', e);
+        }
     },
 
     updateClientesOrcamentos: function() {

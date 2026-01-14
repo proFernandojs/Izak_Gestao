@@ -1,0 +1,18 @@
+{
+  "name": "izak-boleto-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend mínimo para emissão de boletos (mock + template para provedores reais)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "node-fetch": "^2.7.0"
+  }
+}

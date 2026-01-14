@@ -716,6 +716,26 @@
                         <option value="concluido">Concluído</option>
                       </select>
                     </div>
+
+                    <!-- Boleto - Gerador (aparece quando forma de pagamento = boleto) -->
+                    <div id="boleto-actions" class="hidden">
+                      <hr />
+                      <h4>Boleto</h4>
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label for="boleto-vencimento">Vencimento*</label>
+                          <input type="date" id="boleto-vencimento" />
+                        </div>
+                        <div class="form-group" style="flex:2">
+                          <label for="boleto-instrucoes">Instruções</label>
+                          <input type="text" id="boleto-instrucoes" placeholder="Ex.: Não receber após 30 dias. Juros 1% a.m." />
+                        </div>
+                      </div>
+                      <div class="form-actions">
+                        <button type="button" id="emitir-boleto-btn" class="btn-primary">Emitir Boleto (Teste)</button>
+                      </div>
+                      <div id="boleto-result" class="helper"></div>
+                    </div>
                   </div>
 
                   <div class="form-actions">
@@ -1458,6 +1478,8 @@
     <script src="modules/orcamentos.js"></script>
     <script src="modules/clientes.js" defer></script>
     <script src="modules/os.js"></script>
+    <!-- Serviço de boletos -->
+    <script src="modules/boleto.js"></script>
     <script src="modules/financeiro.js"></script>
     <script src="modules/relatorios.js"></script>
   </body>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Autenticação - Izak Gestão</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+    .test-section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 8px; }
+    .test-section h3 { margin-top: 0; color: #333; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #1f6feb; color: white; border: none; border-radius: 5px; }
+    button:hover { background: #0d4fc7; }
+    .result { margin-top: 10px; padding: 10px; border-radius: 5px; }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    input { padding: 8px; margin: 5px 0; width: 300px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    .config { background: #fff3cd; padding: 15px; border-radius: 8px; border: 2px solid #ffc107; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Teste de Autenticação - Sistema Centralizado</h1>
+  
+  <div class="config">
+    <h3>⚙️ Configuração</h3>
+    <label for="api-url">URL da API:</label>
+    <input type="text" id="api-url" value="http://localhost:3000" placeholder="http://localhost:3000">
+    <button onclick="saveConfig()">💾 Salvar</button>
+    <p style="font-size: 12px; color: #666; margin-top: 10px;">
+      💡 Para testes locais, use: <code>http://localhost:3000</code><br>
+      💡 Para produção, use sua URL do Railway/Render: <code>https://izak-api.railway.app</code>
+    </p>
+  </div>
+
+  <div class="test-section">
+    <h3>1️⃣ Teste de Conectividade</h3>
+    <button onclick="testConnection()">Testar Conexão com Servidor</button>
+    <div id="connection-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h3>2️⃣ Teste de Cadastro</h3>
+    <label>Usuário:</label>
+    <input type="text" id="reg-username" value="teste_user">
+    <label>Email:</label>
+    <input type="email" id="reg-email" value="teste@example.com">
+    <label>Senha:</label>
+    <input type="password" id="reg-password" value="senha123">
+    <label>Pergunta de Recuperação:</label>
+    <select id="reg-question">
+      <option value="pet">Nome do primeiro pet</option>
+      <option value="mae">Nome da mãe</option>
+      <option value="cidade">Cidade onde nasceu</option>
+    </select>
+    <label>Resposta:</label>
+    <input type="text" id="reg-answer" value="rex">
+    <br>
+    <button onclick="testRegister()">Cadastrar Usuário</button>
+    <div id="register-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h3>3️⃣ Teste de Login</h3>
+    <label>Usuário ou Email:</label>
+    <input type="text" id="login-username" value="teste_user">
+    <label>Senha:</label>
+    <input type="password" id="login-password" value="senha123">
+    <br>
+    <button onclick="testLogin()">Fazer Login</button>
+    <div id="login-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h3>4️⃣ Teste de Recuperação de Senha</h3>
+    <label>Usuário ou Email:</label>
+    <input type="text" id="reset-username" value="teste_user">
+    <label>Resposta da Pergunta:</label>
+    <input type="text" id="reset-answer" value="rex">
+    <label>Nova Senha:</label>
+    <input type="password" id="reset-password" value="novasenha456">
+    <br>
+    <button onclick="testReset()">Resetar Senha</button>
+    <div id="reset-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h3>5️⃣ Teste Multi-Dispositivos</h3>
+    <p>Para testar sincronização entre dispositivos:</p>
+    <ol>
+      <li>Cadastre um usuário aqui</li>
+      <li>Abra esta página em outro navegador ou aba anônima</li>
+      <li>Configure a mesma URL da API</li>
+      <li>Tente fazer login com as mesmas credenciais</li>
+      <li>✅ Deve funcionar!</li>
+    </ol>
+  </div>
+
+  <script src="modules/auth.js"></script>
+  <script>
+    let apiUrl = localStorage.getItem('test-api-url') || 'http://localhost:3000';
+    document.getElementById('api-url').value = apiUrl;
+
+    function saveConfig() {
+      apiUrl = document.getElementById('api-url').value.trim();
+      localStorage.setItem('test-api-url', apiUrl);
+      Auth.baseUrl = apiUrl;
+      showResult('connection-result', 'URL salva: ' + apiUrl, 'info');
+    }
+
+    function showResult(elementId, message, type) {
+      const el = document.getElementById(elementId);
+      el.innerHTML = `<div class="result ${type}">${message}</div>`;
+    }
+
+    async function testConnection() {
+      try {
+        Auth.baseUrl = apiUrl;
+        const response = await fetch(`${apiUrl}/api/boletos/test-123`);
+        const isOk = response.status === 404 || response.status === 200; // 404 é ok, significa que o servidor respondeu
+        
+        if (isOk) {
+          showResult('connection-result', '✅ Servidor está respondendo!', 'success');
+        } else {
+          showResult('connection-result', `⚠️ Servidor respondeu com status ${response.status}`, 'info');
+        }
+      } catch (error) {
+        showResult('connection-result', `❌ Erro de conexão: ${error.message}<br><br>Certifique-se de que o servidor está rodando!`, 'error');
+      }
+    }
+
+    async function testRegister() {
+      try {
+        Auth.baseUrl = apiUrl;
+        const result = await Auth.register({
+          username: document.getElementById('reg-username').value,
+          email: document.getElementById('reg-email').value,
+          password: document.getElementById('reg-password').value,
+          recoveryQuestion: document.getElementById('reg-question').value,
+          recoveryAnswer: document.getElementById('reg-answer').value
+        });
+
+        if (result.ok) {
+          showResult('register-result', `✅ Usuário cadastrado com sucesso!<br>ID: ${result.user.id}<br>Username: ${result.user.username}`, 'success');
+        } else {
+          showResult('register-result', `❌ Erro no cadastro: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        showResult('register-result', `❌ Erro: ${error.message}`, 'error');
+      }
+    }
+
+    async function testLogin() {
+      try {
+        Auth.baseUrl = apiUrl;
+        const result = await Auth.login(
+          document.getElementById('login-username').value,
+          document.getElementById('login-password').value
+        );
+
+        if (result.ok) {
+          showResult('login-result', `✅ Login realizado com sucesso!<br>Username: ${result.user.username}<br>Email: ${result.user.email}`, 'success');
+        } else {
+          showResult('login-result', `❌ Erro no login: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        showResult('login-result', `❌ Erro: ${error.message}`, 'error');
+      }
+    }
+
+    async function testReset() {
+      try {
+        Auth.baseUrl = apiUrl;
+        const result = await Auth.resetPassword(
+          document.getElementById('reset-username').value,
+          document.getElementById('reset-answer').value,
+          document.getElementById('reset-password').value
+        );
+
+        if (result.ok) {
+          showResult('reset-result', `✅ Senha resetada com sucesso!<br>${result.message}`, 'success');
+        } else {
+          showResult('reset-result', `❌ Erro ao resetar: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        showResult('reset-result', `❌ Erro: ${error.message}`, 'error');
+      }
+    }
+
+    // Auto-teste de conexão ao carregar
+    window.addEventListener('load', () => {
+      saveConfig();
+      setTimeout(testConnection, 500);
+    });
+  </script>
+</body>
+</html>

@@ -190,14 +190,14 @@
         e.preventDefault();
         const user = document.getElementById('login-user').value.trim();
         const pass = document.getElementById('login-pass').value;
-        const ok = await Auth.login(user, pass);
+        const result = await Auth.login(user, pass);
         const msg = document.getElementById('login-msg');
-        if (ok) {
+        if (result.ok) {
           msg.textContent = 'Login realizado. Redirecionando...';
           msg.className = 'helper success';
           setTimeout(() => window.location.href = 'index.html', 500);
         } else {
-          msg.textContent = 'Usuário/senha inválidos.';
+          msg.textContent = result.error || 'Usuário/senha inválidos.';
           msg.className = 'helper error';
         }
       });
@@ -217,15 +217,15 @@
           msg.className = 'helper error';
           return;
         }
-        const ok = await Auth.register({ username: u, email, password: p1, recoveryQuestion: q, recoveryAnswer: a });
-        if (ok) {
+        const result = await Auth.register({ username: u, email, password: p1, recoveryQuestion: q, recoveryAnswer: a });
+        if (result.ok) {
           msg.textContent = 'Cadastro realizado. Você já pode entrar.';
           msg.className = 'helper success';
           // Alterna para login
           document.querySelector('[data-tab="login"]').click();
           document.getElementById('login-user').value = u;
         } else {
-          msg.textContent = 'Usuário ou e-mail já cadastrado.';
+          msg.textContent = result.error || 'Usuário ou e-mail já cadastrado.';
           msg.className = 'helper error';
         }
       });
@@ -243,13 +243,13 @@
         const ans = document.getElementById('reset-a').value.trim();
         const newPass = document.getElementById('reset-pass').value;
         const msg = document.getElementById('reset-msg');
-        const ok = await Auth.resetPassword(user, ans, newPass);
-        if (ok) {
+        const result = await Auth.resetPassword(user, ans, newPass);
+        if (result.ok) {
           msg.textContent = 'Senha redefinida por resposta. Faça login com a nova senha.';
           msg.className = 'helper success';
           document.querySelector('[data-tab="login"]').click();
         } else {
-          msg.textContent = 'Não foi possível redefinir. Verifique usuário e resposta.';
+          msg.textContent = result.error || 'Não foi possível redefinir. Verifique usuário e resposta.';
           msg.className = 'helper error';
         }
       });
@@ -274,13 +274,13 @@
         const code = document.getElementById('reset-code').value.trim();
         const newPass = document.getElementById('reset-pass-email').value;
         const msg = document.getElementById('reset-msg');
-        const ok = await Auth.resetPasswordWithCode(user, code, newPass);
-        if (ok) {
+        const result = await Auth.resetPasswordWithCode(user, code, newPass);
+        if (result.ok) {
           msg.textContent = 'Senha redefinida por código. Faça login com a nova senha.';
           msg.className = 'helper success';
           document.querySelector('[data-tab="login"]').click();
         } else {
-          msg.textContent = 'Não foi possível redefinir. Código inválido ou expirado.';
+          msg.textContent = result.error || 'Não foi possível redefinir. Código inválido ou expirado.';
           msg.className = 'helper error';
         }
       });

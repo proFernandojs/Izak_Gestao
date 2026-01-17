@@ -3,26 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const crypto = require('crypto');
-const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 app.use(express.json());
 app.use(morgan('dev'));
-
-// Inicializa Supabase (se configurado)
-let supabase = null;
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-
-if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
-  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  console.log('✅ Supabase conectado:', SUPABASE_URL);
-} else {
-  console.log('⚠️  Supabase não configurado - usando armazenamento local');
-}
 
 // CORS básico (permite arquivo local/origin null e lista do .env)
 const origins = (process.env.ORIGINS || '').split(',').filter(Boolean);
@@ -48,7 +34,6 @@ const makeLinhaDigitavel = () => {
 // Arquivo para persistência de dados
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const STORE_FILE = path.join(DATA_DIR, 'boletos.json');
 
 // Garante que o diretório existe
 if (!fs.existsSync(DATA_DIR)) {
@@ -84,290 +69,13 @@ function saveUsers() {
   }
 }
 
-// Funções para salvar/carregar boletos
-function loadStore() {
-  try {
-    if (fs.existsSync(STORE_FILE)) {
-      const data = fs.readFileSync(STORE_FILE, 'utf8');
-      const storeArray = JSON.parse(data);
-      const map = new Map();
-      storeArray.forEach(item => map.set(item.id, item));
-      console.log(`✅ ${map.size} boletos carregados de ${STORE_FILE}`);
-      return map;
-    }
-  } catch (err) {
-    console.error('⚠️ Erro ao carregar boletos:', err.message);
-  }
-  return new Map();
-}
-
-function saveStore() {
-  try {
-    const storeArray = Array.from(store.values());
-    fs.writeFileSync(STORE_FILE, JSON.stringify(storeArray, null, 2), 'utf8');
-  } catch (err) {
-    console.error('❌ Erro ao salvar boletos:', err.message);
-  }
-}
-
 // Carrega dados ao iniciar
 const users = loadUsers();
-const store = loadStore();
 
-// Provider selection
-const PROVIDER = (process.env.PROVIDER || 'MOCK').toUpperCase();
-const PAGBANK_TOKEN = process.env.PAGBANK_TOKEN || '';
-const PAGBANK_SECRET = process.env.PAGBANK_SECRET || '';
+// Util IDs (compatível com CommonJS)
+const genId = () => crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase();
 
-// Helper: decide headers for PagBank
-const pagbankHeaders = () => ({
-  'Authorization': `Bearer ${PAGBANK_TOKEN}`,
-  'Content-Type': 'application/json'
-});
-
-const fallbackAddress = {
-  street: process.env.PAGADOR_STREET || 'Av. Paulista',
-  number: process.env.PAGADOR_NUMBER || '1000',
-  locality: process.env.PAGADOR_DISTRICT || 'Centro',
-  city: process.env.PAGADOR_CITY || 'Sao Paulo',
-  region: process.env.PAGADOR_UF || 'SP',
-  postal: (process.env.PAGADOR_CEP || '01000000').replace(/\D/g, '')
-};
-
-// Cria payload para PagBank charge (boleto)
-function buildPagBankPayload(body) {
-  try {
-    const { valor, vencimento, pagador, instrucoes, referencia, nossoNumero } = body;
-    
-    // Validações básicas
-    if (!valor || !vencimento || !pagador) {
-      throw new Error('Campos obrigatórios faltando: valor, vencimento, pagador');
-    }
-    
-    const payload = {
-      reference_id: referencia || nossoNumero || genId(),
-      description: 'Boleto Izak',
-      amount: {
-        value: Math.round(Number(valor || 0) * 100),
-        currency: 'BRL'
-      },
-      payment_method: {
-        type: 'BOLETO',
-        boleto: {
-          due_date: vencimento,
-          instruction_lines: {
-            line_1: (instrucoes || '').slice(0, 100),
-            line_2: ''
-          },
-          holder: {
-            name: pagador?.nome,
-            tax_id: (pagador?.documento || '').replace(/\D/g, ''),
-            email: pagador?.email || undefined,
-            address: {
-              country: 'BRA',
-              region_code: pagador?.endereco?.uf || fallbackAddress.region,
-              city: pagador?.endereco?.cidade || fallbackAddress.city,
-              postal_code: (pagador?.endereco?.cep || fallbackAddress.postal).replace(/\D/g, ''),
-              street: pagador?.endereco?.logradouro || fallbackAddress.street,
-              number: pagador?.endereco?.numero || fallbackAddress.number,
-              locality: pagador?.endereco?.bairro || fallbackAddress.locality
-            }
-          }
-        }
-      }
-    };
-    
-    return payload;
-  } catch (err) {
-    console.error('Erro em buildPagBankPayload:', err.message);
-    throw err;
-  }
-}
-
-async function emitWithPagBank(body) {
-  try {
-    if (!PAGBANK_TOKEN) {
-      throw new Error('PAGBANK_TOKEN não configurado');
-    }
-    const payload = buildPagBankPayload(body);
-    console.log('Payload PagBank:', JSON.stringify(payload, null, 2));
-    
-    const resp = await fetch('https://api.pagseguro.com/charges', {
-      method: 'POST',
-      headers: pagbankHeaders(),
-      body: JSON.stringify(payload)
-    });
-    
-    const txt = await resp.text();
-    console.log('Resposta PagBank status:', resp.status);
-    console.log('Resposta PagBank body:', txt);
-    
-    if (!resp.ok) {
-      throw new Error(`PagBank falhou (${resp.status}): ${txt}`);
-    }
-    
-    const data = JSON.parse(txt);
-    const boleto = data?.payment_method?.boleto || {};
-    return {
-      id: data.id,
-      status: data.status || 'emitido',
-      linhaDigitavel: boleto.digitable_line || boleto.barcode || 'N/A',
-      barcode: boleto.barcode || (boleto.digitable_line || '').replace(/\D/g, ''),
-      pdfUrl: boleto.pdf || boleto.download_link || '',
-      createdAt: data.created_at || new Date().toISOString(),
-      provider: 'PAGBANK'
-    };
-  } catch (err) {
-    console.error('Erro em emitWithPagBank:', err.message);
-    throw err;
-  }
-}
-
-async function consultWithPagBank(id) {
-  if (!PAGBANK_TOKEN) throw new Error('PAGBANK_TOKEN não configurado');
-  const resp = await fetch(`https://api.pagseguro.com/charges/${id}`, {
-    method: 'GET',
-    headers: pagbankHeaders()
-  });
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`PagBank consulta falhou (${resp.status}): ${txt}`);
-  }
-  const data = await resp.json();
-  const boleto = data?.payment_method?.boleto || {};
-  return {
-    id: data.id,
-    status: data.status,
-    linhaDigitavel: boleto.digitable_line || boleto.barcode || 'N/A',
-    barcode: boleto.barcode || (boleto.digitable_line || '').replace(/\D/g, ''),
-    pdfUrl: boleto.pdf || boleto.download_link || '',
-    createdAt: data.created_at || new Date().toISOString(),
-    provider: 'PAGBANK'
-  };
-}
-
-async function cancelWithPagBank(id) {
-  if (!PAGBANK_TOKEN) throw new Error('PAGBANK_TOKEN não configurado');
-  const resp = await fetch(`https://api.pagseguro.com/charges/${id}/cancel`, {
-    method: 'POST',
-    headers: pagbankHeaders()
-  });
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`PagBank cancel falhou (${resp.status}): ${txt}`);
-  }
-  const data = await resp.json();
-  return { id: data.id, status: data.status || 'cancelado' };
-}
-
-// POST /api/boletos -> emite boleto (PagBank ou mock)
-app.post('/api/boletos', async (req, res) => {
-  try {
-    const { valor, vencimento, pagador } = req.body || {};
-    if (!valor || !vencimento || !pagador?.nome || !pagador?.documento) {
-      return res.status(400).json({ error: 'Campos obrigatórios: valor, vencimento, pagador.nome, pagador.documento' });
-    }
-
-    let boleto;
-    if (PROVIDER === 'PAGBANK') {
-      console.log('Tentando emitir com PagBank...', req.body);
-      boleto = await emitWithPagBank(req.body);
-      console.log('Boleto PagBank emitido:', boleto);
-    } else {
-      // Mock
-      const id = genId();
-      const linhaDigitavel = makeLinhaDigitavel();
-      const barcode = linhaDigitavel.replace(/\D/g, '');
-      const pdfUrl = `https://via.placeholder.com/1200x1700.png?text=Boleto+${id}`;
-      boleto = {
-        id,
-        status: 'emitido',
-        valor,
-        vencimento,
-        pagador,
-        instrucoes: req.body?.instrucoes || '',
-        nossoNumero: req.body?.nossoNumero || id,
-        referencia: req.body?.referencia || null,
-        linhaDigitavel,
-        barcode,
-        pdfUrl,
-        createdAt: new Date().toISOString(),
-        provider: 'MOCK'
-      };
-    }
-
-    // Armazena no store para consultas/cancelamentos locais
-    store.set(boleto.id, boleto);
-    saveStore(); // Salva no arquivo
-    return res.status(201).json(boleto);
-  } catch (err) {
-    console.error('Erro ao emitir boleto:');
-    console.error('Message:', err.message);
-    console.error('Stack:', err.stack);
-    console.error('Body recebido:', req.body);
-    return res.status(500).json({ error: err.message || 'Falha ao emitir boleto', details: err.stack });
-  }
-});
-
-// GET /api/boletos/:id -> consulta boleto (provider + cache)
-app.get('/api/boletos/:id', async (req, res) => {
-  const cached = store.get(req.params.id);
-  try {
-    if (PROVIDER === 'PAGBANK') {
-      const remote = await consultWithPagBank(req.params.id);
-      const merged = { ...cached, ...remote };
-      store.set(req.params.id, merged);
-      return res.json(merged);
-    }
-  } catch (err) {
-    console.warn('Consulta PagBank falhou, retornando cache se existir:', err.message);
-  }
-  if (!cached) return res.status(404).json({ error: 'Boleto não encontrado' });
-  return res.json(cached);
-});
-
-// POST /api/boletos/:id/cancel -> cancela boleto
-app.post('/api/boletos/:id/cancel', async (req, res) => {
-  const cached = store.get(req.params.id);
-  if (!cached) return res.status(404).json({ error: 'Boleto não encontrado' });
-  if (cached.status === 'pago') return res.status(400).json({ error: 'Boleto já pago' });
-  try {
-    if (PROVIDER === 'PAGBANK') {
-      const remote = await cancelWithPagBank(req.params.id);
-      const merged = { ...cached, ...remote, canceledAt: new Date().toISOString() };
-      store.set(cached.id, merged);
-      return res.json(merged);
-    }
-  } catch (err) {
-    console.error('Cancel PagBank falhou:', err.message);
-    return res.status(500).json({ error: err.message || 'Falha ao cancelar' });
-  }
-  // Mock cancel
-  cached.status = 'cancelado';
-  cached.canceledAt = new Date().toISOString();
-  store.set(cached.id, cached);
-  saveStore(); // Salva no arquivo
-  return res.json(cached);
-});
-
-// Webhook de confirmação de pagamento (PagBank ou mock)
-// Configure a URL deste endpoint no painel do PagBank.
-app.post('/webhooks/boletos', (req, res) => {
-  const { id, status } = req.body || {};
-  if (!id) return res.status(400).json({ error: 'id ausente' });
-  const b = store.get(id) || { id, status: 'desconhecido' };
-  if (status === 'PAID' || status === 'paid') {
-    b.status = 'pago';
-    b.paidAt = new Date().toISOString();
-  }
-  store.set(id, b);
-  saveStore(); // Salva no arquivo
-  return res.json({ ok: true });
-});
-
-// ==================== AUTENTICAÇÃO ====================
-
-// POST /api/auth/register - Registrar novo usuário (Supabase)
+// POST /api/auth/register - Registrar novo usuário (Local)
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, email, password, recoveryQuestion, recoveryAnswer } = req.body;
@@ -379,38 +87,7 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Se Supabase está configurado, usa a autenticação nativa
-    if (supabase) {
-      // Registra o usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-            recovery_question: recoveryQuestion || '',
-            recovery_answer: recoveryAnswer ? crypto.createHash('sha256').update(recoveryAnswer.toLowerCase().trim()).digest('hex') : ''
-          }
-        }
-      });
-
-      if (authError) {
-        console.error('Erro Supabase Auth:', authError);
-        return res.status(400).json({ ok: false, error: authError.message });
-      }
-
-      console.log(`✅ Novo usuário registrado no Supabase: ${username} (${email})`);
-      return res.status(201).json({ 
-        ok: true, 
-        user: { 
-          id: authData.user.id, 
-          username, 
-          email: authData.user.email 
-        } 
-      });
-    }
-
-    // Fallback: armazenamento local (se Supabase não configurado)
+    // Verifica se usuário já existe
     const exists = Array.from(users.values()).some(u => 
       u.username.toLowerCase() === username.toLowerCase() || 
       (email && u.email && u.email.toLowerCase() === email.toLowerCase())
@@ -436,7 +113,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     users.set(userId, user);
     saveUsers();
-    console.log(`✅ Novo usuário registrado localmente: ${username} (ID: ${userId})`);
+    console.log(`✅ Novo usuário registrado: ${username} (ID: ${userId})`);
 
     return res.status(201).json({ 
       ok: true, 
@@ -448,7 +125,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/login - Login (Supabase)
+// POST /api/auth/login - Login (Local)
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { usernameOrEmail, password } = req.body;
@@ -457,69 +134,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'username e password são obrigatórios' });
     }
 
-    // Se Supabase está configurado
-    if (supabase) {
-      // Tenta login com email
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: usernameOrEmail,
-        password
-      });
-
-      if (authError) {
-        // Se falhar, pode ser porque o usuário passou username ao invés de email
-        // Busca o email pelo username nos metadados
-        console.log('Tentando buscar usuário por username...');
-        
-        // Fallback: tenta buscar na tabela de profiles (se existir)
-        const { data: profiles, error: profileError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', usernameOrEmail)
-          .single();
-
-        if (!profileError && profiles?.email) {
-          // Tenta login novamente com o email encontrado
-          const { data: retryAuth, error: retryError } = await supabase.auth.signInWithPassword({
-            email: profiles.email,
-            password
-          });
-
-          if (retryError) {
-            return res.status(401).json({ ok: false, error: 'Usuário ou senha incorretos' });
-          }
-
-          const username = retryAuth.user.user_metadata?.username || usernameOrEmail;
-          console.log(`✅ Login bem-sucedido no Supabase: ${username}`);
-          
-          return res.json({ 
-            ok: true, 
-            user: { 
-              id: retryAuth.user.id, 
-              username,
-              email: retryAuth.user.email 
-            },
-            session: retryAuth.session
-          });
-        }
-
-        return res.status(401).json({ ok: false, error: 'Usuário ou senha incorretos' });
-      }
-
-      const username = authData.user.user_metadata?.username || usernameOrEmail;
-      console.log(`✅ Login bem-sucedido no Supabase: ${username}`);
-      
-      return res.json({ 
-        ok: true, 
-        user: { 
-          id: authData.user.id, 
-          username,
-          email: authData.user.email 
-        },
-        session: authData.session
-      });
-    }
-
-    // Fallback: armazenamento local
+    // Busca usuário no armazenamento local
     const q = usernameOrEmail.toLowerCase().trim();
     const user = Array.from(users.values()).find(u => 
       u.username.toLowerCase() === q || 
@@ -535,7 +150,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'Usuário ou senha incorretos' });
     }
 
-    console.log(`✅ Login bem-sucedido localmente: ${user.username}`);
+    console.log(`✅ Login bem-sucedido: ${user.username}`);
     return res.json({ 
       ok: true, 
       user: { id: user.id, username: user.username, email: user.email } 
@@ -627,7 +242,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 app.listen(port, () => {
-  console.log(`Boleto server listening on port ${port}`);
-  console.log(`PROVIDER: ${PROVIDER}`);
-  console.log(`PAGBANK_TOKEN configurado: ${PAGBANK_TOKEN ? 'SIM' : 'NÃO'}`);
+  console.log(`✅ Servidor rodando na porta ${port}`);
+  console.log(`📁 Usuários armazenados em: ${USERS_FILE}`);
 });

@@ -1,0 +1,25 @@
+# Dados do servidor (usuários e boletos)
+server/data/
+
+# Node modules
+node_modules/
+server/node_modules/
+
+# Variáveis de ambiente
+.env
+server/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

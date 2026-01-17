@@ -28,10 +28,12 @@ const Auth = {
   },
 
   async register({ username, email, password, recoveryQuestion, recoveryAnswer }) {
-    if (!username || !password || !recoveryQuestion || !recoveryAnswer) return { ok: false, error: 'Campos obrigatórios faltando' };
+    if (!username || !password || !email) {
+      return { ok: false, error: 'Username, email e senha são obrigatórios' };
+    }
     
     try {
-      console.log('📝 Tentando registrar:', { username, email, baseUrl: this.baseUrl });
+      console.log('📝 Tentando registrar no Supabase:', { username, email, baseUrl: this.baseUrl });
       const response = await fetch(`${this.baseUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,7 +48,12 @@ const Auth = {
         return { ok: false, error: data.error || 'Falha ao registrar' };
       }
       
-      // Cache local para offline
+      // Salva sessão se o servidor retornar
+      if (data.session) {
+        sessionStorage.setItem('izakSession', JSON.stringify(data.session));
+      }
+      
+      // Cache local para offline (opcional)
       const users = this._getUsers();
       const passwordHash = await this._hash(password);
       const recoveryHash = await this._hash(recoveryAnswer);
@@ -109,6 +116,11 @@ const Auth = {
       
       // Salva sessão
       sessionStorage.setItem('izakCurrentUser', JSON.stringify(data.user));
+      
+      // Salva token de sessão se fornecido (Supabase)
+      if (data.session) {
+        sessionStorage.setItem('izakSession', JSON.stringify(data.session));
+      }
       
       // Atualiza cache local
       const users = this._getUsers();

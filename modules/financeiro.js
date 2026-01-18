@@ -211,6 +211,17 @@ const FinanceiroModule = {
     },
     
     initCharts: function() {
+        // Destrói gráficos existentes antes de criar novos
+        if (this.charts.receitaDespesa) {
+            this.charts.receitaDespesa.destroy();
+        }
+        if (this.charts.status) {
+            this.charts.status.destroy();
+        }
+        if (this.charts.fluxoCaixa) {
+            this.charts.fluxoCaixa.destroy();
+        }
+        
         // Gráfico de Receitas x Despesas
         const ctx1 = document.getElementById('receita-despesa-chart');
         if(ctx1) {
@@ -868,15 +879,6 @@ const FinanceiroModule = {
                                 <span class="conta-status status-${conta.status}">${conta.status}</span>
                                 <button class="btn-edit" data-id="${conta.id}" data-tipo="${tipo}">Editar</button>
                                 <button class="btn-delete" data-id="${conta.id}" data-tipo="${tipo}">Excluir</button>
-                                ${tipo === 'receber' ? `
-                                    ${conta?.boleto?.id ? `
-                                        <button class="btn-secondary" data-action="boleto-pdf" data-id="${conta.id}">PDF</button>
-                                        <button class="btn-secondary" data-action="boleto-linha" data-id="${conta.id}">Linha</button>
-                                        ${conta.boleto.status !== 'pago' ? `<button class="btn-secondary" data-action="boleto-cancel" data-id="${conta.id}">Cancelar Boleto</button>` : ''}
-                                    ` : `
-                                        ${conta.status !== 'pago' ? `<button class="btn-primary" data-action="boleto-emit" data-id="${conta.id}">Emitir Boleto</button>` : ''}
-                                    `}
-                                ` : ''}
                         </div>
         `;
         
@@ -898,104 +900,8 @@ const FinanceiroModule = {
                 this.deleteConta(id, tipo);
             }
         });
-
-        // Ações de boleto (contas a receber)
-        if (tipo === 'receber') {
-            const emitBtn = element.querySelector('[data-action="boleto-emit"]');
-            const pdfBtn = element.querySelector('[data-action="boleto-pdf"]');
-            const linhaBtn = element.querySelector('[data-action="boleto-linha"]');
-            const cancelBtn = element.querySelector('[data-action="boleto-cancel"]');
-
-            if (emitBtn) {
-                emitBtn.addEventListener('click', async () => {
-                    try {
-                        await this.emitirBoletoParaConta(conta);
-                        alert('Boleto emitido com sucesso!');
-                        this.renderContasReceber();
-                    } catch (err) {
-                        alert('Falha ao emitir boleto: ' + (err?.message || err));
-                    }
-                });
-            }
-            if (pdfBtn) {
-                pdfBtn.addEventListener('click', () => {
-                    const url = conta?.boleto?.pdfUrl;
-                    if (url) window.open(url, '_blank');
-                });
-            }
-            if (linhaBtn) {
-                linhaBtn.addEventListener('click', async () => {
-                    const linha = conta?.boleto?.linhaDigitavel;
-                    if (!linha) return;
-                    try { await navigator.clipboard.writeText(linha); alert('Linha digitável copiada!'); } catch {}
-                });
-            }
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', async () => {
-                    if (!conta?.boleto?.id) return;
-                    if (!confirm('Cancelar este boleto?')) return;
-                    try {
-                        const res = await BoletoService.cancelar(conta.boleto.id);
-                        conta.boleto = { ...conta.boleto, status: res.status };
-                        // Persistir
-                        const idx = IzakGestao.data.financeiro.contasReceber.findIndex(c => c.id === conta.id);
-                        if (idx >= 0) IzakGestao.data.financeiro.contasReceber[idx] = conta;
-                        IzakGestao.saveData();
-                        this.renderContasReceber();
-                    } catch (err) {
-                        alert('Falha ao cancelar: ' + (err?.message || err));
-                    }
-                });
-            }
-        }
         
         return element;
-    },
-
-    // Localiza cliente por nome para montar pagador
-    _findClienteByName: function(nome) {
-        const list = IzakGestao?.data?.clientes || [];
-        const normalized = (nome || '').toLowerCase();
-        return list.find(c => (c.nome || '').toLowerCase() === normalized) || null;
-    },
-
-    emitirBoletoParaConta: async function(conta) {
-        // Coleta dados do pagador a partir do nome da conta
-        const cliente = this._findClienteByName(conta.clienteFornecedor);
-        if (!cliente || !cliente.documento) {
-            throw new Error('Cliente não encontrado ou sem CPF/CNPJ. Atualize os dados do cliente.');
-        }
-        const pagador = {
-            nome: cliente.nome,
-            documento: (cliente.documento || '').replace(/\D/g, ''),
-            email: cliente?.contato?.email || '',
-            telefone: cliente?.contato?.telefone || cliente?.contato?.celular || '',
-            endereco: cliente?.endereco || {}
-        };
-
-        const instrucoes = 'Não receber após 30 dias. Juros 1% a.m.';
-        const referencia = conta.descricao ? `FIN-${conta.descricao}` : `FIN-${conta.id}`;
-
-        const boleto = await BoletoService.emitir({
-            valor: conta.valor,
-            vencimento: conta.vencimento,
-            pagador,
-            instrucoes,
-            referencia
-        });
-
-        // Anexa dados do boleto à conta e persiste
-        conta.boleto = {
-            id: boleto.id,
-            status: boleto.status,
-            linhaDigitavel: boleto.linhaDigitavel,
-            pdfUrl: boleto.pdfUrl,
-            provider: boleto.provider,
-            emitidoEm: boleto.createdAt
-        };
-        const idx = IzakGestao.data.financeiro.contasReceber.findIndex(c => c.id === conta.id);
-        if (idx >= 0) IzakGestao.data.financeiro.contasReceber[idx] = conta;
-        IzakGestao.saveData();
     },
     
     deleteConta: function(id, tipo) {

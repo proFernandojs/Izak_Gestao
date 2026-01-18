@@ -72,9 +72,6 @@ function saveUsers() {
 // Carrega dados ao iniciar
 const users = loadUsers();
 
-// Util IDs (compatível com CommonJS)
-const genId = () => crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase();
-
 // POST /api/auth/register - Registrar novo usuário (Local)
 app.post('/api/auth/register', async (req, res) => {
   try {

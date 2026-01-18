@@ -10,6 +10,9 @@ const app = express();
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Servir arquivos estáticos do projeto (frontend) a partir da raiz do workspace
+app.use(express.static(path.join(__dirname, '..')));
+
 // CORS básico (permite arquivo local/origin null e lista do .env)
 const origins = (process.env.ORIGINS || '').split(',').filter(Boolean);
 const corsOptions = {
@@ -22,6 +25,15 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// Servir favicon requisitado automaticamente pelos navegadores
+app.get('/favicon.ico', (req, res) => {
+  try {
+    const favPath = path.join(__dirname, '..', 'assets', 'Logo1.png');
+    if (fs.existsSync(favPath)) return res.sendFile(favPath);
+  } catch (e) {}
+  res.status(204).end();
+});
 
 // Util IDs (compatível com CommonJS)
 const genId = () => crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase();

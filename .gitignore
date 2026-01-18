@@ -1,5 +1,7 @@
 # Dados do servidor (usuários e boletos)
 server/data/
+# Ignore specific runtime user storage (kept out of repo)
+server/data/users.json
 
 # Node modules
 node_modules/
@@ -8,6 +10,8 @@ server/node_modules/
 # Variáveis de ambiente
 .env
 server/.env
+.env.local
+.env.local
 
 # Logs
 *.log

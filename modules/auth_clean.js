@@ -1,6 +1,6 @@
 // Auth module (API-based for cross-device sync)
 const Auth = {
-  baseUrl: 'http://localhost:3000', // ajuste conforme seu deploy
+  baseUrl: '', // mesmo domínio (Vercel API: /api/*)
 
   // Fallback localStorage para cache/offline
   _getUsers() {

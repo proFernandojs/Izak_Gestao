@@ -36,128 +36,39 @@ O sistema de autenticação agora usa um servidor centralizado para armazenar us
 
 - **`login.html`** - Atualizado para lidar com respostas da API
 
-## Configuração para Produção
+## Configuração Recomendada (Local)
 
-### 1. Hospedagem do Servidor
+Este projeto foi ajustado para rodar em rede local, sem depender de serviços em nuvem.
 
-O servidor precisa estar sempre rodando para sincronizar entre dispositivos. Opções gratuitas:
+### 1. Computador servidor
 
-#### Opção A: Railway (Recomendado)
-```bash
-# 1. Crie conta em https://railway.app
-# 2. Instale o CLI
-npm install -g @railway/cli
+Escolha um computador fixo da empresa para ser o servidor local. Ele precisa ficar ligado durante o período de uso.
 
-# 3. Entre no diretório do servidor
-cd server
-
-# 4. Faça deploy
-railway login
-railway init
-railway up
-```
-
-#### Opção B: Render
-```bash
-# 1. Crie conta em https://render.com
-# 2. Conecte seu repositório GitHub
-# 3. Configure:
-#    - Build Command: cd server && npm install
-#    - Start Command: cd server && node server.js
-```
-
-#### Opção C: Heroku
-```bash
-# 1. Crie conta em https://heroku.com
-# 2. Instale Heroku CLI
-# 3. Entre no diretório do servidor
-cd server
-
-# 4. Faça deploy
-heroku login
-heroku create izak-gestao-api
-git subtree push --prefix server heroku main
-```
-
-### 2. Configurar URL do Servidor
-
-Depois de fazer o deploy do servidor, você receberá uma URL (ex: `https://izak-api.railway.app`).
-
-Atualize o arquivo **`modules/auth.js`**:
-
-```javascript
-const Auth = {
-  baseUrl: 'https://izak-api.railway.app', // ← Cole sua URL aqui
-  // ... resto do código
-}
-```
-
-Atualize também o arquivo **`modules/boleto.js`** (se usar a funcionalidade de boletos):
-
-```javascript
-const BoletoAPI = {
-  baseUrl: 'https://izak-api.railway.app', // ← Cole sua URL aqui
-  // ... resto do código
-}
-```
-
-### 3. Configurar CORS no Servidor
-
-No arquivo **`server/.env`**, adicione a URL do GitHub Pages:
-
-```env
-ORIGINS=https://seu-usuario.github.io
-```
-
-Se seu GitHub Pages está em domínio personalizado:
-
-```env
-ORIGINS=https://seudominio.com.br,https://www.seudominio.com.br
-```
-
-### 4. Banco de Dados (Opcional, mas Recomendado)
-
-Por padrão, o servidor armazena dados em memória (Map). Em produção, isso significa que **os dados serão perdidos quando o servidor reiniciar**.
-
-Para persistência permanente, recomendo usar um banco de dados:
-
-#### MongoDB Atlas (Grátis)
-
-1. Crie conta em https://mongodb.com/cloud/atlas
-2. Crie um cluster gratuito
-3. Obtenha a connection string
-4. Instale mongoose:
+### 2. Iniciar o servidor
 
 ```bash
 cd server
-npm install mongoose
+npm install
+node server.js
 ```
 
-5. Atualize `server.js`:
+Ou use o atalho pronto `iniciar-servidor.bat` na raiz do projeto.
 
-```javascript
-const mongoose = require('mongoose');
+### 3. Acessar pela rede local
 
-// Conectar ao MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'sua-connection-string');
+- No próprio servidor: `http://localhost:3000/login.html`
+- Nos outros computadores/celulares da mesma rede: `http://IP-DO-SERVIDOR:3000/login.html`
 
-// Schema de usuário
-const UserSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: String,
-  passwordHash: String,
-  recoveryQuestion: String,
-  recoveryAnswerHash: String,
-  createdAt: { type: Date, default: Date.now }
-});
+Não é necessário editar `modules/auth.js` para trocar URL, pois ele já usa o mesmo domínio automaticamente.
 
-const User = mongoose.model('User', UserSchema);
+### 4. Persistência de dados
 
-// Substitua o Map por operações no banco:
-// users.set() → await User.create()
-// users.get() → await User.findById()
-// Array.from(users.values()) → await User.find()
-```
+Os dados não ficam só em memória. Eles são persistidos em arquivo local:
+
+- Usuários: `server/data/users.json`
+- Dados do sistema (clientes, estoque, OS, financeiro): `server/data/app-data.json`
+
+Faça backup desses dois arquivos com frequência.
 
 ## Testando Localmente
 
@@ -173,13 +84,9 @@ O servidor rodará em `http://localhost:3000`
 
 ### 2. Abra o frontend
 
-```bash
-# Em outro terminal, na pasta raiz
-# Use qualquer servidor HTTP, exemplo:
-npx http-server -p 8080
-```
+Acesse diretamente no navegador:
 
-Acesse `http://localhost:8080/login.html`
+`http://localhost:3000/login.html`
 
 ### 3. Teste a sincronização
 
@@ -206,7 +113,7 @@ Se o servidor estiver offline ou inacessível, o sistema automaticamente:
 ✅ Respostas de recuperação hashadas  
 
 ### Recomendações Adicionais
-⚠️ Use HTTPS em produção (automático no Railway/Render/Heroku)  
+⚠️ Mantenha o acesso restrito à rede local quando possível  
 ⚠️ Considere adicionar rate limiting  
 ⚠️ Implemente JWT para sessões mais seguras  
 ⚠️ Use bcrypt em vez de SHA-256 para senhas  
@@ -239,26 +146,26 @@ Se o servidor estiver offline ou inacessível, o sistema automaticamente:
 
 ### "Erro de rede ao fazer login"
 - Verifique se o servidor está rodando
-- Confirme a URL em `modules/auth.js`
-- Verifique CORS no `.env` do servidor
+- Abra o sistema pelo endereço do próprio servidor (`localhost:3000` ou `IP:3000`)
+- Verifique se a porta 3000 está liberada no firewall
 
 ### "Usuário já cadastrado (offline)"
 - Limpe o localStorage: `localStorage.clear()`
 - Ou use outro username
 
 ### Senha não sincroniza entre dispositivos
-- Verifique se ambos apontam para a mesma URL do servidor
+- Verifique se todos os dispositivos usam o mesmo endereço (`IP-DO-SERVIDOR:3000`)
 - Confirme que o servidor está online
-- Teste com `curl http://sua-url/api/auth/login`
+- Teste com `curl http://IP-DO-SERVIDOR:3000/api/auth/login`
 
 ## Próximos Passos
 
-1. ✅ Deploy do servidor em produção
-2. ✅ Configurar URL no frontend
-3. ⚠️ Implementar banco de dados (MongoDB)
+1. ✅ Definir computador servidor na empresa
+2. ✅ Ativar inicialização automática do servidor no Windows
+3. ✅ Configurar rotina de backup dos arquivos `users.json` e `app-data.json`
 4. ⚠️ Adicionar JWT para sessões
 5. ⚠️ Implementar 2FA (autenticação em dois fatores)
 
 ---
 
-**Suporte**: Em caso de dúvidas, verifique os logs do servidor com `railway logs` ou consulte a documentação das plataformas de hospedagem.
+**Suporte**: Em caso de dúvidas, verifique os logs no terminal onde o `node server.js` está rodando e valide o acesso via `http://localhost:3000/login.html`.

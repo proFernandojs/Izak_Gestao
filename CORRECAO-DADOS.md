@@ -102,21 +102,23 @@ Você deve ver: `✅ X usuários carregados de users.json`
 - Faça login com as mesmas credenciais
 - Deve funcionar! ✅
 
-## 🚀 Para Usar em Produção (Celular em Outra Rede)
+## 🚀 Para Usar no Cliente (Rede Local)
 
-Se você quiser acessar de qualquer lugar (não só na mesma rede Wi-Fi), você precisa:
+Na configuração atual, o uso recomendado é em rede local da empresa.
 
-1. **Hospedar o servidor na nuvem** (Railway, Render, Heroku)
-2. **Atualizar a URL** em [`modules/auth.js`](modules/auth.js):
+1. Defina um computador fixo como servidor.
+2. Inicie o servidor com `node server.js` (ou `iniciar-servidor.bat`).
+3. Nos demais dispositivos da mesma rede, acesse:
 
-```javascript
-const Auth = {
-  baseUrl: 'https://seu-servidor.railway.app', // ← URL do servidor hospedado
-  // ...
-}
+```text
+http://IP-DO-SERVIDOR:3000/login.html
 ```
 
-Consulte o arquivo [`AUTENTICACAO.md`](AUTENTICACAO.md) para instruções detalhadas de deploy.
+4. Faça backup periódico de:
+    - `server/data/users.json`
+    - `server/data/app-data.json`
+
+Consulte [`DEPLOY.md`](DEPLOY.md) para o passo a passo completo de instalação local.
 
 ## 📝 Resumo
 

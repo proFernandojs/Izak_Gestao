@@ -726,7 +726,7 @@
                           <label for="boleto-vencimento">Vencimento*</label>
                           <input type="date" id="boleto-vencimento" />
                         </div>
-                        <div class="form-group" style="flex:2">
+                        <div class="form-group flex-2">
                           <label for="boleto-instrucoes">Instruções</label>
                           <input type="text" id="boleto-instrucoes" placeholder="Ex.: Não receber após 30 dias. Juros 1% a.m." />
                         </div>
@@ -800,12 +800,12 @@
                         🔍
                       </button>
                     </div>
-                    <select id="filter-tipo">
+                    <select id="filter-tipo" aria-label="Filtrar por tipo de cliente" title="Filtrar por tipo de cliente">
                         <option value="">Todos os tipos</option>
                         <option value="pf">Pessoa Física</option>
                         <option value="pj">Pessoa Jurídica</option>
                     </select>
-                    <select id="filter-status-clientes">
+                    <select id="filter-status-clientes" aria-label="Filtrar por status do cliente" title="Filtrar por status do cliente">
                         <option value="">Todos os status</option>
                         <option value="ativo">Ativo</option>
                         <option value="inativo">Inativo</option>
@@ -1077,7 +1077,7 @@
                 <option value="pago">Pago</option>
                 <option value="atrasado">Atrasado</option>
             </select>
-            <input type="month" id="filter-mes-receber" aria-label="Filtrar por mês">
+            <input type="text" id="filter-mes-receber" aria-label="Filtrar por mês" placeholder="AAAA-MM" pattern="^\d{4}-(0[1-9]|1[0-2])$" title="Informe no formato AAAA-MM">
         </div>
         
         <div id="contas-receber-list" class="contas-list">
@@ -1100,7 +1100,7 @@
                 <option value="pago">Pago</option>
                 <option value="atrasado">Atrasado</option>
             </select>
-            <input type="month" id="filter-mes-pagar" aria-label="Filtrar por mês">
+            <input type="text" id="filter-mes-pagar" aria-label="Filtrar por mês" placeholder="AAAA-MM" pattern="^\d{4}-(0[1-9]|1[0-2])$" title="Informe no formato AAAA-MM">
         </div>
         
         <div id="contas-pagar-list" class="contas-list">

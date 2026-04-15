@@ -296,6 +296,10 @@ header {
     margin-bottom: 15px;
 }
 
+.form-group.flex-2 {
+    flex: 2;
+}
+
 .form-group label {
     display: block;
     margin-bottom: 5px;

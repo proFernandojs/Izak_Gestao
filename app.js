@@ -1,6 +1,52 @@
 // Objeto principal do aplicativo
 const IzakGestao = {
-    init: function() {
+    defaultData: function() {
+        return {
+            orcamentos: [],
+            ordensServico: [],
+            clientes: [],
+            estoque: [],
+            financeiro: {
+                contasReceber: [],
+                contasPagar: [],
+                caixa: []
+            }
+        };
+    },
+
+    normalizeData: function(data) {
+        const base = this.defaultData();
+        const src = data && typeof data === 'object' ? data : {};
+
+        base.orcamentos = Array.isArray(src.orcamentos) ? src.orcamentos : [];
+        base.ordensServico = Array.isArray(src.ordensServico) ? src.ordensServico : [];
+        base.clientes = Array.isArray(src.clientes) ? src.clientes : [];
+        base.estoque = Array.isArray(src.estoque) ? src.estoque : [];
+
+        const financeiro = src.financeiro && typeof src.financeiro === 'object' ? src.financeiro : {};
+        base.financeiro = {
+            contasReceber: Array.isArray(financeiro.contasReceber) ? financeiro.contasReceber : [],
+            contasPagar: Array.isArray(financeiro.contasPagar) ? financeiro.contasPagar : [],
+            caixa: Array.isArray(financeiro.caixa) ? financeiro.caixa : []
+        };
+
+        return base;
+    },
+
+    hasBusinessData: function(data) {
+        const d = this.normalizeData(data);
+        return (
+            d.orcamentos.length > 0 ||
+            d.ordensServico.length > 0 ||
+            d.clientes.length > 0 ||
+            d.estoque.length > 0 ||
+            d.financeiro.contasReceber.length > 0 ||
+            d.financeiro.contasPagar.length > 0 ||
+            d.financeiro.caixa.length > 0
+        );
+    },
+
+    init: async function() {
         console.log('IzakGestao iniciando...');
         // Redireciona para login se não autenticado
         try {
@@ -14,7 +60,7 @@ const IzakGestao = {
             return;
         }
         this.bindEvents();
-        this.loadData();
+        await this.loadData();
         this.updateDashboard();
         this.checkActiveModule();
         console.log('IzakGestao inicializado');
@@ -90,23 +136,46 @@ const IzakGestao = {
         });
     },
     
-    loadData: function() {
-        // Carrega dados do localStorage ou inicializa se não existir
-        this.data = JSON.parse(localStorage.getItem('izakData')) || {
-            orcamentos: [],
-            ordensServico: [],
-            clientes: [],
-            estoque: [],
-            financeiro: {
-                contasReceber: [],
-                contasPagar: [],
-                caixa: []
+    loadData: async function() {
+        // Base local imediata para inicialização rápida/fallback
+        const local = this.normalizeData(JSON.parse(localStorage.getItem('izakData') || 'null'));
+        this.data = local;
+
+        // Tenta sincronizar do servidor local
+        try {
+            const response = await fetch('/api/data', {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const payload = await response.json();
+            const remote = this.normalizeData(payload && payload.data);
+
+            // Migração inicial: se servidor estiver vazio e navegador já tiver dados,
+            // mantém dados locais e envia ao servidor para centralizar.
+            if (!this.hasBusinessData(remote) && this.hasBusinessData(local)) {
+                this.data = local;
+                this.saveData();
+            } else {
+                this.data = remote;
+                localStorage.setItem('izakData', JSON.stringify(remote));
             }
-        };
+        } catch (err) {
+            console.warn('Falha ao sincronizar dados do servidor, usando localStorage:', err);
+        }
     },
     
     saveData: function() {
         localStorage.setItem('izakData', JSON.stringify(this.data));
+
+        // Sincronização assíncrona com o servidor local.
+        fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: this.normalizeData(this.data) })
+        }).catch((err) => {
+            console.warn('Falha ao salvar dados no servidor local:', err);
+        });
     },
     
     loadModule: function(moduleName) {

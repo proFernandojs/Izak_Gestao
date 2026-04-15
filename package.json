@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "dev": "node static_server.js",
+    "start": "node static_server.js"
+  },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",

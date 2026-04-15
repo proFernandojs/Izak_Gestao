@@ -1,247 +1,328 @@
-# 🚀 Guia Rápido de Deploy - Autenticação Sincronizada
+# Guia de Instalacao Local no Cliente
 
-## ✅ O que foi feito?
+## Visao Geral
 
-Implementei um **sistema de autenticação centralizado** que garante que a senha cadastrada pelo cliente funcione em **todos os dispositivos** (celular, tablet, computador).
+Este sistema pode rodar sem Railway, Render ou banco online.
+Os usuarios ficam salvos localmente no computador servidor, no arquivo `server/data/users.json`.
 
-### Como funciona agora:
+O funcionamento fica assim:
 
-**ANTES** (localStorage):
-- ❌ Cada dispositivo tinha sua própria lista de usuários
-- ❌ Senha cadastrada no celular não funcionava no computador
-- ❌ Dados ficavam apenas no navegador
-
-**AGORA** (API centralizada):
-- ✅ Todos os dispositivos conectam no mesmo servidor
-- ✅ Mesma senha funciona em celular, tablet e computador
-- ✅ Dados sincronizados automaticamente
-- ✅ Funciona offline (fallback para localStorage)
+- Um computador da empresa fica como servidor local.
+- Esse computador precisa ficar ligado durante o horario de uso.
+- Os demais computadores e celulares da mesma rede acessam pelo navegador.
+- Se o computador servidor desligar, os outros usuarios param de acessar ate ele voltar.
 
 ---
 
-## 📋 Passos para Ativar
+## O Que Instalar no Computador do Cliente
 
-### Passo 1: Fazer Deploy do Servidor
+No computador que vai servir o sistema, instale:
 
-Escolha uma das opções gratuitas abaixo:
+1. Node.js 18 ou superior.
+2. A pasta completa do projeto.
+3. As dependencias do backend com `npm install` dentro da pasta `server`.
 
-#### 🟣 Railway (Mais Fácil - Recomendado)
-
-1. Acesse https://railway.app e crie uma conta
-2. Clique em **"New Project"** → **"Deploy from GitHub repo"**
-3. Conecte este repositório
-4. Configure:
-   - **Root Directory**: `server`
-   - **Start Command**: `node server.js`
-5. Nas **Variables**, adicione:
-   ```
-   PORT=3000
-   ORIGINS=https://seu-usuario.github.io
-   ```
-6. Copie a URL gerada (ex: `https://izak-api.railway.app`)
-
-#### 🟢 Render
-
-1. Acesse https://render.com e crie uma conta
-2. Clique em **"New Web Service"**
-3. Conecte seu repositório GitHub
-4. Configure:
-   - **Root Directory**: `server`
-   - **Build Command**: `npm install`
-   - **Start Command**: `node server.js`
-5. Em **Environment Variables**, adicione:
-   ```
-   ORIGINS=https://seu-usuario.github.io
-   ```
-6. Copie a URL gerada (ex: `https://izak-api.onrender.com`)
-
-### Passo 2: Configurar o Frontend
-
-Abra o arquivo **`modules/auth.js`** e encontre a linha 3:
-
-```javascript
-baseUrl: 'http://localhost:3000', // ajuste conforme seu deploy
-```
-
-Altere para a URL do seu servidor:
-
-```javascript
-baseUrl: 'https://izak-api.railway.app', // ← Cole sua URL aqui
-```
-
-Se você usa a funcionalidade de boletos, também atualize **`modules/boleto.js`**:
-
-```javascript
-baseUrl: 'https://izak-api.railway.app', // ← Cole a mesma URL
-```
-
-### Passo 3: Fazer Deploy do Frontend no GitHub Pages
-
-1. Faça commit das alterações:
-   ```bash
-   git add .
-   git commit -m "Configurar autenticação centralizada"
-   git push origin main
-   ```
-
-2. No GitHub, vá em **Settings** → **Pages**
-3. Em **Source**, selecione **main branch** → **/ (root)**
-4. Clique em **Save**
-5. Aguarde alguns minutos e acesse: `https://seu-usuario.github.io/GraficaHome`
+Nao precisa instalar banco de dados externo.
+Nao precisa contratar hospedagem.
 
 ---
 
-## 🧪 Testando
+## Onde Os Dados Ficam Salvos
 
-### Teste Local (antes do deploy)
+Os usuarios ficam gravados em:
 
-1. **Inicie o servidor**:
-   ```bash
-   cd server
-   npm install
-   node server.js
-   ```
-
-2. **Abra o frontend** em outro terminal:
-   ```bash
-   # Na pasta raiz
-   npx http-server -p 8080
-   ```
-
-3. Acesse `http://localhost:8080/login.html`
-
-### Teste de Sincronização Multi-Dispositivos
-
-1. **Cadastre** um usuário no computador
-2. Abra o GitHub Pages no **celular** (ou aba anônima)
-3. **Faça login** com as mesmas credenciais
-4. ✅ **Deve funcionar!**
-
----
-
-## 🔧 Configuração Avançada (Opcional)
-
-### Adicionar Banco de Dados (MongoDB)
-
-Por padrão, os dados ficam em memória. Para persistência permanente:
-
-1. Crie conta gratuita em https://mongodb.com/cloud/atlas
-2. Crie um cluster e obtenha a connection string
-3. No Railway/Render, adicione a variável:
-   ```
-   MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/izak
-   ```
-4. No servidor, instale mongoose:
-   ```bash
-   cd server
-   npm install mongoose
-   ```
-
-### Configurar Domínio Personalizado
-
-Se você tem um domínio próprio (ex: `meusite.com.br`):
-
-1. Configure o CNAME no seu provedor de domínio
-2. No GitHub Pages, adicione o domínio personalizado
-3. Atualize a variável `ORIGINS` no servidor:
-   ```
-   ORIGINS=https://meusite.com.br,https://www.meusite.com.br
-   ```
-
----
-
-## ❓ Problemas Comuns
-
-### "Erro de rede ao fazer login"
-
-**Causa**: Servidor offline ou URL incorreta
-
-**Solução**:
-1. Verifique se o servidor está rodando no Railway/Render
-2. Confirme que a URL em `modules/auth.js` está correta
-3. Teste a URL no navegador: `https://sua-url/api/auth/login`
-
-### "CORS error" no console
-
-**Causa**: GitHub Pages URL não está nas origens permitidas
-
-**Solução**:
-1. No Railway/Render, vá em **Variables**
-2. Adicione/edite `ORIGINS`:
-   ```
-   ORIGINS=https://seu-usuario.github.io
-   ```
-3. Reinicie o servidor
-
-### Senha não sincroniza entre dispositivos
-
-**Causa**: Frontend aponta para `localhost` em vez do servidor de produção
-
-**Solução**:
-1. Abra `modules/auth.js`
-2. Certifique-se que `baseUrl` aponta para a URL de produção
-3. Faça commit e push novamente
-
----
-
-## 📊 Estrutura da API
-
-### Endpoints Disponíveis
-
-```
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/reset-password
-GET  /api/auth/recovery-question
+```text
+server/data/users.json
 ```
 
-### Exemplo de Uso
+Os dados principais do sistema (clientes, estoque, orcamentos, OS e financeiro) ficam em:
 
-```javascript
-// Cadastro
-const response = await fetch('https://sua-url/api/auth/register', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    username: 'joao',
-    email: 'joao@email.com',
-    password: 'senha123',
-    recoveryQuestion: 'pet',
-    recoveryAnswer: 'rex'
-  })
-});
+```text
+server/data/app-data.json
+```
 
-// Login
-const response = await fetch('https://sua-url/api/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    usernameOrEmail: 'joao',
-    password: 'senha123'
-  })
-});
+Esses dois arquivos precisam entrar na rotina de backup do cliente.
+
+---
+
+## Passo a Passo de Instalacao
+
+### Instalacao Rapida (Recomendada)
+
+O projeto ja inclui um instalador unico:
+
+```text
+instalador-cliente.bat
+```
+
+Execute esse arquivo no computador servidor do cliente.
+Ele faz automaticamente:
+
+1. Verifica se o Node.js esta instalado.
+2. Roda `npm install` na pasta `server`.
+3. Ativa inicializacao automatica no Windows.
+4. Cria atalho de backup na area de trabalho.
+5. Cria atalho para iniciar servidor na area de trabalho.
+
+Se preferir fazer tudo manualmente, siga os passos abaixo.
+
+### 1. Instalar o Node.js
+
+Baixe e instale o Node.js LTS:
+
+https://nodejs.org
+
+Depois confirme no Prompt ou PowerShell:
+
+```bash
+node -v
+npm -v
+```
+
+### 2. Copiar o projeto para o computador do cliente
+
+Exemplo:
+
+```text
+C:\GraficaHome
+```
+
+### 3. Instalar as dependencias do servidor
+
+Abra o terminal dentro da pasta `server`:
+
+```bash
+cd C:\GraficaHome\server
+npm install
+```
+
+### 4. Iniciar o servidor local
+
+Ainda dentro da pasta `server`:
+
+```bash
+node server.js
+```
+
+Se estiver tudo certo, o sistema ficara disponivel em:
+
+```text
+http://localhost:3000/login.html
 ```
 
 ---
 
-## 🎯 Checklist Final
+## Como Acessar Pela Rede Local
 
-- [ ] Servidor deployado no Railway/Render
-- [ ] URL copiada e configurada em `modules/auth.js`
-- [ ] Variável `ORIGINS` configurada no servidor
-- [ ] Frontend deployado no GitHub Pages
-- [ ] Teste de cadastro funcionando
-- [ ] Teste de login em múltiplos dispositivos funcionando
+### 1. Descobrir o IP do computador servidor
+
+No Windows:
+
+```bash
+ipconfig
+```
+
+Procure o IPv4 da rede local, por exemplo:
+
+```text
+192.168.0.50
+```
+
+### 2. Abrir o sistema nos outros computadores
+
+Nos outros computadores da mesma rede, abra:
+
+```text
+http://192.168.0.50:3000/login.html
+```
+
+No celular conectado ao mesmo Wi-Fi:
+
+```text
+http://192.168.0.50:3000/login.html
+```
 
 ---
 
-## 📚 Documentação Completa
+## Liberar No Firewall Do Windows
 
-Para mais detalhes técnicos, veja [AUTENTICACAO.md](./AUTENTICACAO.md)
+Se os outros dispositivos nao conseguirem acessar, libere a porta 3000 no Windows Firewall.
 
-## 💡 Suporte
+Resumo do processo:
 
-Se encontrar problemas, verifique:
-1. Logs do servidor no Railway/Render
-2. Console do navegador (F12)
-3. Network tab para ver as requisições
+1. Abra `Firewall do Windows com Seguranca Avancada`.
+2. Entre em `Regras de Entrada`.
+3. Crie uma nova regra para `Porta`.
+4. Escolha `TCP`.
+5. Informe a porta `3000`.
+6. Permita a conexao.
+7. Marque pelo menos `Rede Privada`.
+
+---
+
+## Como Entregar Ao Cliente
+
+O formato mais simples e este:
+
+1. Escolher um computador fixo da empresa como servidor.
+2. Deixar o projeto instalado nele.
+3. Deixar um atalho para iniciar o servidor.
+4. Orientar o cliente a abrir o sistema pelo IP desse computador.
+
+Exemplo de acesso:
+
+```text
+http://192.168.0.50:3000/login.html
+```
+
+---
+
+## Como Fazer O Servidor Iniciar Todo Dia
+
+Voce tem tres opcoes praticas.
+
+### Opcao 1: Manual
+
+Todo dia, alguem abre o terminal e executa:
+
+```bash
+cd C:\GraficaHome\server
+node server.js
+```
+
+### Opcao 2: Arquivo .bat
+
+O projeto ja inclui o arquivo:
+
+```text
+iniciar-servidor.bat
+```
+
+Basta dar duplo clique nele para iniciar o servidor.
+
+Se preferir criar manualmente, use:
+
+```bat
+cd /d C:\GraficaHome\server
+node server.js
+pause
+```
+
+Assim o cliente so precisa dar duplo clique.
+
+### Opcao 3: Iniciar com o Windows
+
+Para ativar automaticamente, o projeto ja inclui:
+
+```text
+ativar-inicializacao-windows.bat
+```
+
+Esse arquivo instala a inicializacao automatica no Windows para o usuario atual.
+
+Para desativar depois, use:
+
+```text
+desativar-inicializacao-windows.bat
+```
+
+Detalhe tecnico: a inicializacao chama o arquivo `iniciar-servidor-background.vbs`, que sobe o servidor em segundo plano e grava log em `server/server-autostart.log`.
+
+Isso e melhor para evitar esquecer de abrir o sistema no inicio do expediente.
+
+---
+
+## Backup Recomendado
+
+Os arquivos mais importantes sao:
+
+```text
+server/data/users.json
+server/data/app-data.json
+```
+
+Copie esses arquivos regularmente para outra pasta, pendrive, HD externo ou nuvem do proprio cliente.
+
+Para facilitar, o projeto ja inclui:
+
+```text
+backup-dados.bat
+```
+
+Ao executar esse arquivo, o sistema cria uma pasta em `backups` com data e hora, contendo:
+
+```text
+users.json
+app-data.json
+```
+
+---
+
+## Limites Deste Modelo Local
+
+Esse modelo e bom quando o sistema sera usado apenas na empresa e durante o horario comercial.
+
+Limitacoes:
+
+1. Se o computador servidor desligar, o sistema para para os outros usuarios.
+2. Se a rede local cair, o acesso compartilhado para.
+3. Se quiser acesso de fora da empresa, ai sim precisa de hospedagem externa ou VPN.
+
+---
+
+## Checklist De Entrega
+
+- [ ] Node.js instalado no computador servidor
+- [ ] Projeto copiado para o computador servidor
+- [ ] `npm install` executado em `server`
+- [ ] Servidor testado com `node server.js`
+- [ ] Porta 3000 liberada no firewall
+- [ ] IP local identificado
+- [ ] Teste feito em outro computador da rede
+- [ ] Backup de `server/data/users.json` definido
+- [ ] Backup de `server/data/app-data.json` definido
+- [ ] Inicializacao automatica ativada (opcional)
+
+---
+
+## Suporte Rapido
+
+### Outros computadores nao acessam
+
+Verifique:
+
+1. Se o computador servidor esta ligado.
+2. Se `node server.js` continua rodando.
+3. Se a porta 3000 esta liberada no firewall.
+4. Se o IP do servidor mudou.
+
+### O sistema abre no servidor, mas nao em outra maquina
+
+Normalmente isso e firewall, antivirus ou IP incorreto.
+
+### Os dados sumiram
+
+Verifique os arquivos:
+
+```text
+server/data/users.json
+server/data/app-data.json
+```
+
+---
+
+## Observacao Final
+
+Para uso local, abra sempre o sistema pelo proprio servidor Node, por exemplo:
+
+```text
+http://localhost:3000/login.html
+```
+
+ou pela rede:
+
+```text
+http://IP-DO-SERVIDOR:3000/login.html
+```
+
+Assim o frontend e a API usam o mesmo endereco e a autenticacao funciona corretamente na rede local.

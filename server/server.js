@@ -46,6 +46,7 @@ const makeLinhaDigitavel = () => {
 // Arquivo para persistência de dados
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const APP_DATA_FILE = path.join(DATA_DIR, 'app-data.json');
 
 // Garante que o diretório existe
 if (!fs.existsSync(DATA_DIR)) {
@@ -81,8 +82,96 @@ function saveUsers() {
   }
 }
 
+function getDefaultAppData() {
+  return {
+    orcamentos: [],
+    ordensServico: [],
+    clientes: [],
+    estoque: [],
+    financeiro: {
+      contasReceber: [],
+      contasPagar: [],
+      caixa: []
+    }
+  };
+}
+
+function normalizeAppData(input) {
+  const base = getDefaultAppData();
+  const data = input && typeof input === 'object' ? input : {};
+
+  base.orcamentos = Array.isArray(data.orcamentos) ? data.orcamentos : [];
+  base.ordensServico = Array.isArray(data.ordensServico) ? data.ordensServico : [];
+  base.clientes = Array.isArray(data.clientes) ? data.clientes : [];
+  base.estoque = Array.isArray(data.estoque) ? data.estoque : [];
+
+  const financeiro = data.financeiro && typeof data.financeiro === 'object' ? data.financeiro : {};
+  base.financeiro = {
+    contasReceber: Array.isArray(financeiro.contasReceber) ? financeiro.contasReceber : [],
+    contasPagar: Array.isArray(financeiro.contasPagar) ? financeiro.contasPagar : [],
+    caixa: Array.isArray(financeiro.caixa) ? financeiro.caixa : []
+  };
+
+  return base;
+}
+
+function loadAppData() {
+  try {
+    if (fs.existsSync(APP_DATA_FILE)) {
+      const raw = fs.readFileSync(APP_DATA_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      const normalized = normalizeAppData(parsed);
+      console.log(`✅ Dados do app carregados de ${APP_DATA_FILE}`);
+      return normalized;
+    }
+  } catch (err) {
+    console.error('⚠️ Erro ao carregar dados do app:', err.message);
+  }
+  console.log('📝 Iniciando com base de dados do app vazia');
+  return getDefaultAppData();
+}
+
+function saveAppData(appData) {
+  try {
+    const normalized = normalizeAppData(appData);
+    fs.writeFileSync(APP_DATA_FILE, JSON.stringify(normalized, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('❌ Erro ao salvar dados do app:', err.message);
+    return false;
+  }
+}
+
 // Carrega dados ao iniciar
 const users = loadUsers();
+let appData = loadAppData();
+
+// GET /api/data - retorna base de dados principal do sistema
+app.get('/api/data', (req, res) => {
+  try {
+    return res.json({ ok: true, data: appData });
+  } catch (err) {
+    console.error('Erro em GET /api/data:', err);
+    return res.status(500).json({ ok: false, error: 'Erro ao carregar dados' });
+  }
+});
+
+// POST /api/data - salva base de dados principal do sistema
+app.post('/api/data', (req, res) => {
+  try {
+    const incoming = req.body && req.body.data;
+    const normalized = normalizeAppData(incoming);
+    appData = normalized;
+    const ok = saveAppData(appData);
+    if (!ok) {
+      return res.status(500).json({ ok: false, error: 'Erro ao salvar dados' });
+    }
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Erro em POST /api/data:', err);
+    return res.status(500).json({ ok: false, error: 'Erro ao salvar dados' });
+  }
+});
 
 // POST /api/auth/register - Registrar novo usuário (Local)
 app.post('/api/auth/register', async (req, res) => {
@@ -253,4 +342,5 @@ process.on('unhandledRejection', (reason, promise) => {
 app.listen(port, () => {
   console.log(`✅ Servidor rodando na porta ${port}`);
   console.log(`📁 Usuários armazenados em: ${USERS_FILE}`);
+  console.log(`📁 Dados do app armazenados em: ${APP_DATA_FILE}`);
 });

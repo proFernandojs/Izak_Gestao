@@ -1,0 +1,29 @@
+/* Estilos para Leaflet Map Container */
+#map-container {
+    width: 100% !important;
+    height: 500px !important;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+    background-color: #f0f0f0;
+}
+
+.leaflet-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e5e3df;
+}
+
+.leaflet-control-zoom,
+.leaflet-control-attribution {
+    font-size: 12px;
+}
+
+.leaflet-popup-content {
+    width: auto !important;
+    max-width: 200px;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 4px;
+}

@@ -6,7 +6,15 @@
     <title>Izak Comunicação Visual - Gestão</title>
     <link rel="stylesheet" href="style.css" />
       <link rel="stylesheet" href="search-styles.css" />
+    <link rel="stylesheet" href="leaflet-styles.css" />
     <link rel="icon" href="./assets/Logo1.png" />
+    <!-- Highcharts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
   </head>
   <body>
     <!-- Menu Toggle Button para Mobile -->
@@ -66,12 +74,28 @@
               <canvas id="chart-os"></canvas>
             </div>
           </div>
+
+          <!-- Novos gráficos Highcharts -->
           <div class="stats-card">
-            <h3>Contas a Receber</h3>
-            <p id="contas-receber">R$ 0,00</p>
-            <div class="chart-container">
-              <canvas id="chart-financeiro"></canvas>
-            </div>
+            <h3>Valores Recebidos por Mês</h3>
+            <div id="chart-valores-mes" style="min-height: 400px;"></div>
+          </div>
+
+          <div class="stats-card">
+            <h3>Valores Recebidos por Dia (Mês Atual)</h3>
+            <div id="chart-valores-dia" style="min-height: 400px;"></div>
+          </div>
+
+          <!-- Top 5 Clientes -->
+          <div class="stats-card" style="grid-column: 1 / -1;">
+            <h3>Top 5 Clientes por Faturamento</h3>
+            <div id="chart-top-clientes" style="min-height: 400px;"></div>
+          </div>
+
+          <!-- Receita vs Meta -->
+          <div class="stats-card" style="grid-column: 1 / -1;">
+            <h3>Receita vs Meta Mensal</h3>
+            <div id="chart-receita-meta" style="min-height: 400px;"></div>
           </div>
         </div>
         <!-- Conteúdo do módulo de Ordens de Serviço -->
@@ -244,6 +268,7 @@
                       <option value="andamento">Em Andamento</option>
                       <option value="aguardando">Aguardando Aprovação</option>
                       <option value="finalizada">Finalizada</option>
+                      <option value="pago">Pago</option>
                       <option value="cancelada">Cancelada</option>
                     </select>
                   </div>
@@ -294,11 +319,32 @@
 
                 <div class="form-group">
                   <label for="os-materiais">Materiais Necessários</label>
+                  
+                  <div class="os-materiais-container">
+                    <div class="materiais-header">
+                      <select id="os-estoque-select" class="estoque-select" style="flex: 1;">
+                        <option value="">Selecione um material do estoque...</option>
+                      </select>
+                      <button
+                        type="button"
+                        id="add-os-estoque-item-btn"
+                        class="btn-accent"
+                        title="Adicionar material do estoque"
+                      >
+                        + Adicionar do Estoque
+                      </button>
+                    </div>
+                    
+                    <div id="os-materiais-list" class="os-materiais-list">
+                      <!-- Materiais serão adicionados aqui -->
+                    </div>
+                  </div>
+                  
                   <textarea
                     id="os-materiais"
                     name="os-materiais"
                     rows="3"
-                    placeholder="Liste os materiais necessários para o serviço"
+                    placeholder="Ou descreva os materiais necessários manualmente"
                   ></textarea>
                 </div>
 
@@ -623,13 +669,26 @@
                     <div class="itens-container">
                       <div class="item-header">
                         <h4>Itens do Orçamento</h4>
-                        <button
-                          type="button"
-                          id="add-orcamento-item-btn"
-                          class="btn-accent"
-                        >
-                          + Adicionar Item
-                        </button>
+                        <div class="item-header-actions">
+                          <select id="estoque-select" class="estoque-select">
+                            <option value="">Selecione um material do estoque...</option>
+                          </select>
+                          <button
+                            type="button"
+                            id="add-estoque-item-btn"
+                            class="btn-accent"
+                            title="Adicionar item do estoque"
+                          >
+                            + Do Estoque
+                          </button>
+                          <button
+                            type="button"
+                            id="add-orcamento-item-btn"
+                            class="btn-accent"
+                          >
+                            + Adicionar Item
+                          </button>
+                        </div>
                       </div>
 
                       <div id="itens-list">
@@ -1479,6 +1538,7 @@
     <script src="modules/clientes.js" defer></script>
     <script src="modules/os.js"></script>
     <script src="modules/financeiro.js"></script>
+    <script src="modules/impressora_termica.js"></script>
     <script src="modules/relatorios.js"></script>
   </body>
 </html>

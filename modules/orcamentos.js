@@ -336,6 +336,76 @@ const OrcamentosModule = {
         });
         
         console.log('Listener de adicionar item vinculado com sucesso');
+        
+        // Vincula botão de adicionar item do estoque
+        this.attachAddEstoqueItemButton();
+        
+        // Carrega itens de estoque no seletor
+        this.loadEstoqueSelect();
+    },
+
+    attachAddEstoqueItemButton: function() {
+        console.log('Iniciando attachAddEstoqueItemButton');
+        const addEstoqueBtn = document.getElementById('add-estoque-item-btn');
+        const estoqueSelect = document.getElementById('estoque-select');
+        
+        if(!addEstoqueBtn || !estoqueSelect) {
+            console.warn('Botão ou seletor de estoque não encontrado');
+            return;
+        }
+        
+        // Clona para remover listeners antigos
+        const newBtn = addEstoqueBtn.cloneNode(true);
+        if(addEstoqueBtn.parentNode) {
+            addEstoqueBtn.parentNode.replaceChild(newBtn, addEstoqueBtn);
+        }
+        
+        newBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const selectedId = estoqueSelect.value;
+            if(!selectedId) {
+                alert('Selecione um material do estoque');
+                return;
+            }
+            
+            const item = IzakGestao.data.estoque.find(e => e.id === selectedId);
+            if(item) {
+                // Adiciona item com dados do estoque
+                this.addItemRow({
+                    descricao: item.nome,
+                    quantidade: 1,
+                    valorUnitario: item.preco || 0,
+                    total: item.preco || 0,
+                    estoqueId: item.id
+                });
+                
+                // Reseta o seletor
+                estoqueSelect.value = '';
+            }
+        });
+    },
+
+    loadEstoqueSelect: function() {
+        console.log('Carregando itens de estoque no seletor');
+        const estoqueSelect = document.getElementById('estoque-select');
+        if(!estoqueSelect) return;
+        
+        // Limpa as opções (mantém a primeira)
+        while(estoqueSelect.options.length > 1) {
+            estoqueSelect.remove(1);
+        }
+        
+        const itens = IzakGestao.data.estoque || [];
+        console.log('Total de itens de estoque:', itens.length);
+        
+        itens.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.nome;
+            estoqueSelect.appendChild(option);
+        });
     },
 
     handleClienteSelection: function(cliente) {
@@ -532,6 +602,11 @@ const OrcamentosModule = {
         itemRow.className = 'item-row';
         itemRow.id = `item-${itemId}`;
         
+        // Adiciona atributo data-estoqueId se o item veio do estoque
+        if(item && item.estoqueId) {
+            itemRow.dataset.estoqueId = item.estoqueId;
+        }
+        
         itemRow.innerHTML = `
             <input type="text" class="item-descricao" placeholder="Descrição" value="${item ? item.descricao : ''}">
             <input type="number" class="item-quantidade" placeholder="Qtd" min="1" value="${item ? item.quantidade : 1}" step="1">
@@ -628,12 +703,20 @@ const OrcamentosModule = {
             const total = parseFloat(row.querySelector('.item-total').value) || 0;
             
             if(descricao && quantidade > 0 && valorUnitario > 0) {
-                itens.push({
+                const item = {
                     descricao,
                     quantidade,
                     valorUnitario,
                     total
-                });
+                };
+                
+                // Captura o estoqueId se o item foi adicionado do estoque
+                const estoqueId = row.dataset.estoqueId;
+                if(estoqueId) {
+                    item.estoqueId = estoqueId;
+                }
+                
+                itens.push(item);
             }
         });
         

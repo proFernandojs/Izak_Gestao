@@ -265,7 +265,7 @@ header {
     font-weight: bold;
 }
 
-.btn-edit, .btn-delete {
+.btn-edit, .btn-delete, .btn-print {
     padding: 5px 10px;
     border: none;
     border-radius: 4px;
@@ -280,6 +280,18 @@ header {
 .btn-delete {
     background-color: var(--danger-color);
     color: white;
+}
+
+.btn-print {
+    background-color: #3498db;
+    color: white;
+    font-size: 16px;
+    padding: 5px 8px;
+    margin-right: 5px;
+}
+
+.btn-print:hover {
+    background-color: #2980b9;
 }
 
 /* Item Form Styles */
@@ -850,6 +862,11 @@ header {
 
 .status-cancelada {
     background-color: var(--danger-color);
+    color: white;
+}
+
+.status-pago {
+    background-color: #27ae60;
     color: white;
 }
 

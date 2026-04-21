@@ -312,7 +312,7 @@ const FinanceiroModule = {
         // Contas a Receber
         const totalReceber = IzakGestao.data.financeiro.contasReceber
             .filter(cr => cr.status !== 'pago')
-            .reduce((sum, cr) => sum + cr.valor, 0);
+            .reduce((sum, cr) => sum + (Number(cr.valor) || 0), 0);
         
         const receberHoje = IzakGestao.data.financeiro.contasReceber
             .filter(cr => cr.vencimento === hoje && cr.status === 'pendente').length;
@@ -320,7 +320,7 @@ const FinanceiroModule = {
         // Contas a Pagar
         const totalPagar = IzakGestao.data.financeiro.contasPagar
             .filter(cp => cp.status !== 'pago')
-            .reduce((sum, cp) => sum + cp.valor, 0);
+            .reduce((sum, cp) => sum + (Number(cp.valor) || 0), 0);
         
         const pagarHoje = IzakGestao.data.financeiro.contasPagar
             .filter(cp => cp.vencimento === hoje && cp.status === 'pendente').length;
@@ -408,7 +408,7 @@ const FinanceiroModule = {
             if(cr.status === 'pago' && cr.dataPagamento) {
                 const dataPagamento = new Date(cr.dataPagamento);
                 if(dataPagamento.getMonth() === mes && dataPagamento.getFullYear() === ano) {
-                    receita += cr.valor;
+                    receita += Number(cr.valor) || 0;
                 }
             }
         });
@@ -418,7 +418,7 @@ const FinanceiroModule = {
             if(cp.status === 'pago' && cp.dataPagamento) {
                 const dataPagamento = new Date(cp.dataPagamento);
                 if(dataPagamento.getMonth() === mes && dataPagamento.getFullYear() === ano) {
-                    despesa += cp.valor;
+                    despesa += Number(cp.valor) || 0;
                 }
             }
         });
@@ -429,9 +429,9 @@ const FinanceiroModule = {
                 const dataMov = new Date(mov.data);
                 if(dataMov.getMonth() === mes && dataMov.getFullYear() === ano) {
                     if(mov.tipo === 'entrada') {
-                        receita += mov.valor;
+                        receita += Number(mov.valor) || 0;
                     } else {
-                        despesa += mov.valor;
+                        despesa += Number(mov.valor) || 0;
                     }
                 }
             });
@@ -565,7 +565,7 @@ const FinanceiroModule = {
             if(cr.status !== 'pago') {
                 const vencimento = new Date(cr.vencimento);
                 if(vencimento <= dataFim) {
-                    saldo += cr.valor;
+                    saldo += Number(cr.valor) || 0;
                 }
             }
         });
@@ -575,7 +575,7 @@ const FinanceiroModule = {
             if(cp.status !== 'pago') {
                 const vencimento = new Date(cp.vencimento);
                 if(vencimento <= dataFim) {
-                    saldo -= cp.valor;
+                    saldo -= Number(cp.valor) || 0;
                 }
             }
         });
@@ -596,7 +596,7 @@ const FinanceiroModule = {
             if(cr.status === 'pago' && cr.dataPagamento) {
                 const dataPagamento = new Date(cr.dataPagamento);
                 if(dataPagamento.getMonth() === mesAtual && dataPagamento.getFullYear() === anoAtual) {
-                    receita += cr.valor;
+                    receita += Number(cr.valor) || 0;
                 }
             }
         });
@@ -615,7 +615,7 @@ const FinanceiroModule = {
                         );
                         if(item && item.custo) {
                             // Estima quantidade vendida pela descrição ou usa valor aproximado
-                            custo += item.custo;
+                            custo += Number(item.custo) || 0;
                         }
                     }
                 }
@@ -631,7 +631,7 @@ const FinanceiroModule = {
                 cp.categoria.toLowerCase().includes('fornecedor'))) {
                 const dataPagamento = new Date(cp.dataPagamento);
                 if(dataPagamento.getMonth() === mesAtual && dataPagamento.getFullYear() === anoAtual) {
-                    custo += cp.valor;
+                    custo += Number(cp.valor) || 0;
                 }
             }
         });
@@ -795,9 +795,9 @@ const FinanceiroModule = {
         
         // Atualiza saldo do caixa
         if(movimentacao.tipo === 'entrada') {
-            caixaAtual.saldoFinal += movimentacao.valor;
+            caixaAtual.saldoFinal += Number(movimentacao.valor) || 0;
         } else {
-            caixaAtual.saldoFinal -= movimentacao.valor;
+            caixaAtual.saldoFinal -= Number(movimentacao.valor) || 0;
         }
         
         caixaAtual.movimentacoes.push(movimentacao);
@@ -810,11 +810,13 @@ const FinanceiroModule = {
         
         container.innerHTML = '';
         
+        // Mostrar apenas contas pendentes e atrasadas (SEM status "pago")
         const contas = [...IzakGestao.data.financeiro.contasReceber]
+            .filter(conta => conta.status !== 'pago')
             .sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
         
         if(contas.length === 0) {
-            container.innerHTML = '<p class="empty-message">Nenhuma conta a receber cadastrada.</p>';
+            container.innerHTML = '<p class="empty-message">Nenhuma conta a receber pendente.</p>';
             return;
         }
         
@@ -877,6 +879,7 @@ const FinanceiroModule = {
             </div>
                         <div class="conta-actions">
                                 <span class="conta-status status-${conta.status}">${conta.status}</span>
+                                ${tipo === 'receber' ? `<button class="btn-print" data-id="${conta.id}" title="Imprimir cupom">🖨️</button>` : ''}
                                 <button class="btn-edit" data-id="${conta.id}" data-tipo="${tipo}">Editar</button>
                                 <button class="btn-delete" data-id="${conta.id}" data-tipo="${tipo}">Excluir</button>
                         </div>
@@ -900,6 +903,20 @@ const FinanceiroModule = {
                 this.deleteConta(id, tipo);
             }
         });
+
+        // Adiciona evento de impressão para contas a receber
+        if (tipo === 'receber') {
+            const btnPrint = element.querySelector('.btn-print');
+            if (btnPrint) {
+                btnPrint.addEventListener('click', (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const conta = IzakGestao.data.financeiro.contasReceber.find(c => c.id === id);
+                    if (conta && typeof ImpressoraTermica !== 'undefined') {
+                        ImpressoraTermica.gerarCupomContaReceber(conta);
+                    }
+                });
+            }
+        }
         
         return element;
     },
@@ -1053,9 +1070,9 @@ const FinanceiroModule = {
             const dataMov = new Date(mov.data).toISOString().split('T')[0];
             if(dataMov === hoje) {
                 if(mov.tipo === 'entrada') {
-                    entradas += mov.valor;
+                    entradas += Number(mov.valor) || 0;
                 } else {
-                    saidas += mov.valor;
+                    saidas += Number(mov.valor) || 0;
                 }
             }
         });
@@ -1135,9 +1152,9 @@ const FinanceiroModule = {
         
         caixa.movimentacoes.forEach(mov => {
             if(mov.tipo === 'entrada') {
-                totalEntradas += mov.valor;
+                totalEntradas += Number(mov.valor) || 0;
             } else {
-                totalSaidas += mov.valor;
+                totalSaidas += Number(mov.valor) || 0;
             }
         });
         
@@ -1286,9 +1303,9 @@ const FinanceiroModule = {
         
         // Atualiza saldo do caixa
         if(movimentacao.tipo === 'entrada') {
-            ultimoCaixa.saldoFinal += movimentacao.valor;
+            ultimoCaixa.saldoFinal += Number(movimentacao.valor) || 0;
         } else {
-            ultimoCaixa.saldoFinal -= movimentacao.valor;
+            ultimoCaixa.saldoFinal -= Number(movimentacao.valor) || 0;
         }
         
         ultimoCaixa.movimentacoes.push(movimentacao);
@@ -1374,7 +1391,7 @@ const FinanceiroModule = {
             if(cr.status !== 'pago') {
                 const dataStr = cr.vencimento;
                 if(fluxoPorDia[dataStr]) {
-                    fluxoPorDia[dataStr].entradas += cr.valor;
+                    fluxoPorDia[dataStr].entradas += Number(cr.valor) || 0;
                 }
             }
         });
@@ -1384,7 +1401,7 @@ const FinanceiroModule = {
             if(cp.status !== 'pago') {
                 const dataStr = cp.vencimento;
                 if(fluxoPorDia[dataStr]) {
-                    fluxoPorDia[dataStr].saidas += cp.valor;
+                    fluxoPorDia[dataStr].saidas += Number(cp.valor) || 0;
                 }
             }
         });

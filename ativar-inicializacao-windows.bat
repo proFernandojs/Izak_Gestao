@@ -14,6 +14,12 @@ set "DST_FILE=%STARTUP_DIR%\Izak - Iniciar Servidor.vbs"
 if not exist "%SRC_FILE%" (
   echo [ERRO] Arquivo nao encontrado: "%SRC_FILE%"
   echo.
+  echo Este arquivo deve ser executado a partir da pasta do projeto GraficaHome.
+  echo Nao execute este .bat a partir da area de trabalho ou de outra pasta.
+  echo.
+  echo Caminho atual do script: %ROOT_DIR%
+  echo Esperado: C:\GraficaHome\
+  echo.
   pause
   exit /b 1
 )

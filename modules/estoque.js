@@ -1,9 +1,14 @@
 // Módulo de Controle de Estoque
 const EstoqueModule = {
+    eventsBound: false,
+
     init: function() {
         console.log('EstoqueModule iniciando...');
         this.renderEstoqueList();
-        this.bindEvents();
+        if (!this.eventsBound) {
+            this.bindEvents();
+            this.eventsBound = true;
+        }
         this.loadCategories();
     },
     
@@ -45,8 +50,9 @@ const EstoqueModule = {
             const submitBtn = itemForm.querySelector('button[type="submit"]');
             if(submitBtn) {
                 submitBtn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
                     ev.stopPropagation(); // Previne propagação
-                    // Garante que o evento submit do form seja disparado
+                    // Garante que o evento submit do form seja disparado apenas uma vez
                     if(typeof itemForm.requestSubmit === 'function') {
                         itemForm.requestSubmit();
                     } else {

@@ -2,10 +2,14 @@
 const RelatoriosModule = {
     filtrosAtuais: {},
     dadosRelatorio: {},
+    initialized: false,
     
     init: function() {
         this.carregarEstatisticas();
-        this.bindEvents();
+        if (!this.initialized) {
+            this.bindEvents();
+            this.initialized = true;
+        }
         this.configurarDatas();
     },
     

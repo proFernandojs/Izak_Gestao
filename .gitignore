@@ -27,3 +27,29 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Backups locais
+backups/
+
+# Executáveis
+ngrok.exe
+
+# Drivers de sistema
+POS58 DRIVER/
+
+# Arquivos de teste
+test_*.js
+test_vega_map.html
+reset_test.js
+
+# Atalhos Windows
+*.lnk
+
+# Batch files e scripts locais
+iniciar-*.bat
+parar-*.bat
+ativar-*.bat
+desativar-*.bat
+mostrar-*.bat
+iniciar-ngrok.ps1
+iniciar-servidor-background.vbs

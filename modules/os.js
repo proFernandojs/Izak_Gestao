@@ -1,9 +1,14 @@
 // Módulo de Ordens de Serviço
 const OSModule = {
+    initialized: false,
+
     init: function() {
         console.log('OSModule iniciando...');
+        if (!this.initialized) {
+            this.bindEvents();
+            this.initialized = true;
+        }
         this.renderOSList();
-        this.bindEvents();
         this.carregarEstatisticas();
         this.carregarOrcamentos();
         this.carregarClientes();
@@ -177,6 +182,10 @@ const OSModule = {
         const form = document.getElementById('os-form');
         form.reset();
         
+        // Limpa lista de materiais
+        const materiaislList = document.getElementById('os-materiais-list');
+        if(materiaislList) materiaislList.innerHTML = '';
+        
         // Define data atual como padrão
         const hoje = new Date().toISOString().split('T')[0];
         document.getElementById('os-data').value = hoje;
@@ -230,6 +239,10 @@ const OSModule = {
         
         // Calcula data de conclusão
         this.calcularDataConclusao();
+        
+        // Carrega estoque e inicializa seletor de materiais
+        this.loadOSEstoqueSelect();
+        this.attachOSEstoqueButtons();
     },
     
     hideOSForm: function() {
@@ -238,6 +251,121 @@ const OSModule = {
         this.carregarEstatisticas();
     },
     
+    loadOSEstoqueSelect: function() {
+        console.log('Carregando itens de estoque no seletor da OS');
+        const estoqueSelect = document.getElementById('os-estoque-select');
+        if(!estoqueSelect) return;
+        
+        // Limpa as opções (mantém a primeira)
+        while(estoqueSelect.options.length > 1) {
+            estoqueSelect.remove(1);
+        }
+        
+        const itens = IzakGestao.data.estoque || [];
+        console.log('Total de itens de estoque:', itens.length);
+        
+        itens.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.nome;
+            estoqueSelect.appendChild(option);
+        });
+    },
+    
+    attachOSEstoqueButtons: function() {
+        console.log('Attachando botões de estoque da OS');
+        const addBtn = document.getElementById('add-os-estoque-item-btn');
+        const estoqueSelect = document.getElementById('os-estoque-select');
+        
+        if(!addBtn || !estoqueSelect) {
+            console.warn('Botão ou seletor de estoque da OS não encontrado');
+            return;
+        }
+        
+        // Clona para remover listeners antigos
+        const newBtn = addBtn.cloneNode(true);
+        if(addBtn.parentNode) {
+            addBtn.parentNode.replaceChild(newBtn, addBtn);
+        }
+        
+        newBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const selectedId = estoqueSelect.value;
+            if(!selectedId) {
+                alert('Selecione um material do estoque');
+                return;
+            }
+            
+            const item = IzakGestao.data.estoque.find(e => e.id === selectedId);
+            if(item) {
+                this.addOSMaterial({
+                    nome: item.nome,
+                    quantidade: 1,
+                    estoqueId: item.id
+                });
+                
+                estoqueSelect.value = '';
+            }
+        });
+    },
+    
+    addOSMaterial: function(material) {
+        const materiaislList = document.getElementById('os-materiais-list');
+        if(!materiaislList) return;
+        
+        const materialId = Date.now() + Math.random().toString(36).substr(2, 9);
+        const materialElement = document.createElement('div');
+        materialElement.className = 'material-item';
+        materialElement.id = `material-${materialId}`;
+        materialElement.dataset.estoqueId = material.estoqueId || '';
+        
+        materialElement.innerHTML = `
+            <input type="text" class="material-nome" value="${material.nome}" placeholder="Nome do material">
+            <input type="number" class="material-quantidade" value="${material.quantidade}" min="1" placeholder="Quantidade">
+            <button type="button" class="remove-material">✕</button>
+        `;
+        
+        materiaislList.appendChild(materialElement);
+        
+        // Evento para remover
+        materialElement.querySelector('.remove-material').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            materialElement.remove();
+        });
+    },
+    
+    collectOSMaterials: function() {
+        // Coleta materiais selecionados do estoque
+        const materializList = document.getElementById('os-materiais-list');
+        let materiaisTexto = '';
+        
+        if(materializList && materializList.children.length > 0) {
+            const materiais = [];
+            document.querySelectorAll('.material-item').forEach(item => {
+                const nome = item.querySelector('.material-nome').value;
+                const quantidade = item.querySelector('.material-quantidade').value;
+                if(nome && quantidade) {
+                    materiais.push(`${quantidade}x ${nome}`);
+                }
+            });
+            
+            if(materiais.length > 0) {
+                materiaisTexto = materiais.join('\n');
+            }
+        }
+        
+        // Adiciona materiais descritos manualmente
+        const materiaisTextarea = document.getElementById('os-materiais').value;
+        if(materiaisTextarea) {
+            materiaisTexto += (materiaisTexto ? '\n' : '') + materiaisTextarea;
+        }
+        
+        return materiaisTexto;
+    },
+
     gerarNumeroOS: function() {
         const year = new Date().getFullYear();
         const count = (IzakGestao.data.ordensServico.length + 1).toString().padStart(4, '0');
@@ -405,7 +533,7 @@ const OSModule = {
             dataConclusao: document.getElementById('os-data-conclusao').value ? 
                           document.getElementById('os-data-conclusao').value + 'T00:00:00Z' : null,
             valor: parseFloat(document.getElementById('os-valor').value) || 0,
-            materiais: document.getElementById('os-materiais').value,
+            materiais: this.collectOSMaterials(),
             etapas: etapas,
             progresso: progresso,
             orcamentoId: document.getElementById('os-orcamento').value || null,
@@ -419,6 +547,62 @@ const OSModule = {
         const hoje = new Date();
         const dataPrevista = os.dataConclusao ? new Date(os.dataConclusao) : null;
         os.atrasada = dataPrevista && hoje > dataPrevista && os.status !== 'finalizada' && os.status !== 'cancelada';
+        
+        console.log('📋 Status da OS:', os.status);
+        console.log('💾 Financeiro antes:', IzakGestao.data.financeiro?.contasReceber?.length || 0);
+        
+        // Sincroniza com financeiro - cria ou atualiza conta a receber
+        if (!IzakGestao.data.financeiro) {
+            IzakGestao.data.financeiro = { contasReceber: [], contasPagar: [], caixa: [] };
+        }
+        if (!IzakGestao.data.financeiro.contasReceber) {
+            IzakGestao.data.financeiro.contasReceber = [];
+        }
+
+        // Procura se já existe uma conta a receber para esta OS
+        let contaExistente = IzakGestao.data.financeiro.contasReceber.find(cr => cr.id === `${os.id}-cr`);
+        
+        if (contaExistente) {
+            // Atualiza conta existente
+            console.log('✓ Atualizando conta existente');
+            contaExistente.descricao = os.descricao;
+            contaExistente.valor = os.valor;
+            contaExistente.vencimento = os.dataConclusao ? os.dataConclusao.split('T')[0] : new Date().toISOString().split('T')[0];
+            contaExistente.clienteFornecedor = os.cliente;
+            
+            // Atualizar status da conta baseado no status da OS
+            if (os.status === 'pago') {
+                contaExistente.status = 'pago';
+                contaExistente.dataPagamento = new Date().toISOString().split('T')[0];
+            } else if (os.status === 'cancelada') {
+                contaExistente.status = 'cancelada';
+            } else {
+                contaExistente.status = 'pendente';
+            }
+        } else {
+            // Cria nova conta a receber
+            console.log('✓ Criando nova conta a receber');
+            const statusConta = os.status === 'pago' ? 'pago' : 'pendente';
+            const contaReceber = {
+                id: `${os.id}-cr`,
+                numero: `CR-${os.numero}`,
+                descricao: os.descricao,
+                valor: os.valor,
+                vencimento: os.dataConclusao ? os.dataConclusao.split('T')[0] : new Date().toISOString().split('T')[0],
+                dataPagamento: os.status === 'pago' ? new Date().toISOString().split('T')[0] : null,
+                status: statusConta,
+                categoria: 'Ordem de Serviço',
+                clienteFornecedor: os.cliente,
+                formaPagamento: 'pix',
+                orcamentoId: os.orcamentoId,
+                observacoes: `OS: ${os.numero}`,
+                dataCriacao: new Date().toISOString()
+            };
+            console.log('📌 Conta a ser criada:', contaReceber);
+            IzakGestao.data.financeiro.contasReceber.push(contaReceber);
+            console.log('✓ Conta criada:', contaReceber);
+        }
+        console.log('💾 Financeiro depois:', IzakGestao.data.financeiro.contasReceber.length);
         
         // Atualiza ou adiciona a OS
         const index = IzakGestao.data.ordensServico.findIndex(o => o.id === os.id);
@@ -628,6 +812,7 @@ const OSModule = {
                 'andamento': 'Em Andamento',
                 'aguardando': 'Aguardando Aprovação',
                 'finalizada': 'Finalizada',
+                'pago': 'Pago',
                 'cancelada': 'Cancelada'
             }[os.status] || 'Aberta';
             
@@ -693,6 +878,7 @@ const OSModule = {
                     <button class="btn-delete" data-id="${os.id}">Excluir</button>
                     <button class="btn-accent" onclick="OSModule.marcarComoConcluida('${os.id}')">Concluir</button>
                     <button class="btn-primary" onclick="OSModule.verDetalhes('${os.id}')">Detalhes</button>
+                    ${os.status === 'pago' ? '<button class="btn-primary" onclick="OSModule.imprimirOrdemServico(\'' + os.id + '\')" title="Imprimir comprovante de pagamento">🖨️ Imprimir</button>' : ''}
                 </div>
             `;
             
@@ -915,6 +1101,26 @@ const OSModule = {
         return statusMap[status] || status;
     },
     
+    imprimirOrdemServico: function(id) {
+        const os = IzakGestao.data.ordensServico.find(o => o.id === id);
+        if (!os) {
+            alert('Ordem de Serviço não encontrada');
+            return;
+        }
+        
+        if (os.status !== 'pago') {
+            alert('Apenas ordens de serviço com status "Pago" podem ser impressas');
+            return;
+        }
+        
+        // Chama a função do módulo de impressora térmica
+        if (typeof ImpressoraTermica !== 'undefined' && ImpressoraTermica.gerarCupomOrdemServico) {
+            ImpressoraTermica.gerarCupomOrdemServico(os);
+        } else {
+            alert('Módulo de impressora térmica não disponível');
+        }
+    },
+    
     gerarRelatorio: function() {
         // Cria uma nova janela para o relatório
         const printWindow = window.open('', '_blank');
@@ -950,6 +1156,7 @@ const OSModule = {
                     .status-aberta { background-color: #f39c12; }
                     .status-andamento { background-color: #FFD700; color: #333; }
                     .status-finalizada { background-color: #27ae60; }
+                    .status-pago { background-color: #27ae60; }
                     .status-cancelada { background-color: #e74c3c; }
                     .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
                     @media print {

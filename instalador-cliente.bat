@@ -54,10 +54,16 @@ if errorlevel 1 (
   echo [AVISO] Nao foi possivel criar atalho de backup automaticamente.
 )
 
-echo [5/5] Criando atalho para iniciar servidor na area de trabalho...
+echo [5/6] Criando atalho para iniciar servidor na area de trabalho...
 powershell -NoProfile -Command "$desk=[Environment]::GetFolderPath('Desktop'); $s=(New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desk 'Izak - Iniciar Servidor.lnk')); $s.TargetPath='cmd.exe'; $s.Arguments='/c """%START_SCRIPT%"""'; $s.WorkingDirectory='%ROOT_DIR%'; $s.IconLocation='shell32.dll,14'; $s.Save()" >nul 2>&1
 if errorlevel 1 (
   echo [AVISO] Nao foi possivel criar atalho de inicializacao automaticamente.
+)
+
+echo [6/6] Criando atalho para abrir o GraficaHome no navegador...
+powershell -NoProfile -Command "$desk=[Environment]::GetFolderPath('Desktop'); $path=Join-Path $desk 'Izak - Abrir GraficaHome.url'; @('[InternetShortcut]','URL=http://localhost:3000/login.html','IconFile=C:\Windows\System32\shell32.dll','IconIndex=1') | Out-File -FilePath $path -Encoding ASCII" >nul 2>&1
+if errorlevel 1 (
+  echo [AVISO] Nao foi possivel criar atalho do navegador automaticamente.
 )
 
 echo.
